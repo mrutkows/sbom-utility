@@ -54,7 +54,7 @@ func main() {
 	// Use Cobra convention and execute top-level command
 	cmd.Execute(logger)
 
-	schema := cmd.SCHEMA_SPDX_2_2_LOCAL
+	schema := cmd.SCHEMA_SPDX_2_2_2_LOCAL
 	cmd.Validate(schema, "")
 
 	logger.Exit()
