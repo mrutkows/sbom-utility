@@ -11,13 +11,13 @@ import (
 // https://github.com/CycloneDX/specification/blob/master/schema/bom-1.3.schema.json
 // https://github.com/CycloneDX/specification/blob/master/schema/bom-1.3-strict.schema.json
 const (
-	SCHEMA_SPDX_2_2_2_LOC             = "file://schema/spdx/2.2/spdx-schema.json"
+	SCHEMA_SPDX_2_2_2_LOCAL           = "file://schema/spdx/2.2/spdx-schema.json"
 	SCHEMA_CYCLONEDX_1_3_LOCAL        = "file://schema/cyclonedx/1.3/bom-1.3.schema.json"
 	SCHEMA_CYCLONEDX_1_3_STRICT_LOCAL = "file://schema/cyclonedx/1.3/bom-1.3-strict.schema.json"
 )
 
 var (
-	supportedSchemas = []string{SCHEMA_SPDX_2_2_LOCAL}
+	supportedSchemas = []string{SCHEMA_SPDX_2_2_2_LOCAL, SCHEMA_CYCLONEDX_1_3_LOCAL, SCHEMA_CYCLONEDX_1_3_STRICT_LOCAL}
 )
 
 func init() {
