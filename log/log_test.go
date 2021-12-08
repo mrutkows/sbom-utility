@@ -1,5 +1,12 @@
 package log
 
+import (
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,16 +24,10 @@ package log
  * limitations under the License.
  */
 
-import (
-	"os"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
 // Test DumpStruct method will error on Arrays
 func TestDumpStructError(t *testing.T) {
-
-	err := DumpStruct("os.Args", os.Args)
+	logger := NewLogger()
+	logger.SetLevel(TRACE)
+	err := logger.DumpStruct("os.Args", os.Args)
 	assert.NotNil(t, err)
 }

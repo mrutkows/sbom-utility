@@ -12,6 +12,10 @@ import (
 
 type Level int
 
+// Skip 2 on call stack
+// i.e., skip public (Caller) method (e.g., "Trace()" and internal "dumpInterface()" function
+const STACK_SKIP int = 2
+
 // WARNING: some functional logic may assume incremental ordering of levels
 const (
 	ERROR   Level = iota // 0 - Always output errors (stop execution)
@@ -36,6 +40,8 @@ type MyLog struct {
 	indentEnabled bool
 	indentSpaces  uint
 	indentCounter uint
+	tagEnter      string
+	tagExit       string
 }
 
 func NewLogger() MyLog {
@@ -44,11 +50,21 @@ func NewLogger() MyLog {
 		indentEnabled: false,
 		indentSpaces:  2,
 		indentCounter: 0,
+		tagEnter:      "ENTER",
+		tagExit:       "EXIT",
 	}
 }
 
 func (log *MyLog) SetLevel(level Level) {
 	log.logLevel = level
+}
+
+func (log *MyLog) GetLevel() Level {
+	return log.logLevel
+}
+
+func (log *MyLog) GetLevelName() string {
+	return LevelNames[log.logLevel]
 }
 
 func (log *MyLog) SetIndentSpaces(spaces uint) {
@@ -58,44 +74,81 @@ func (log *MyLog) SetIndentSpaces(spaces uint) {
 	}
 }
 
-func (log MyLog) Trace(tag string, value interface{}) {
-	// Skip 2 on call stack (i.e., this method and the method we are calling)
-	log.dumpInterface(TRACE, tag, value, 2)
+func (log MyLog) Trace(value interface{}) {
+	log.dumpInterface(TRACE, "", value, STACK_SKIP)
 }
 
-func (log MyLog) Debug(tag string, value interface{}) {
-	// Skip 2 on call stack (i.e., this method and the method we are calling)
-	log.dumpInterface(DEBUG, tag, value, 2)
+func (log MyLog) Debug(value interface{}) {
+	log.dumpInterface(DEBUG, "", value, STACK_SKIP)
 }
 
-func (log MyLog) Info(tag string, value interface{}) {
-	// Skip 2 on call stack (i.e., this method and the method we are calling)
-	log.dumpInterface(INFO, tag, value, 2)
+func (log MyLog) Info(value interface{}) {
+	log.dumpInterface(INFO, "", value, STACK_SKIP)
 }
 
-func (log MyLog) Warning(tag string, value interface{}) {
-	// Skip 2 on call stack (i.e., this method and the method we are calling)
-	log.dumpInterface(WARNING, tag, value, 2)
+func (log MyLog) Warning(value interface{}) {
+	log.dumpInterface(WARNING, "", value, STACK_SKIP)
 }
 
-func (log MyLog) Error(tag string, value interface{}) {
-	// Skip 2 on call stack (i.e., this method and the method we are calling)
-	log.dumpInterface(ERROR, tag, value, 2)
+// TODO: use fmt.fError ins some manner and/or os.Stderr
+func (log MyLog) Error(value interface{}) {
+	log.dumpInterface(ERROR, "", value, STACK_SKIP)
 }
 
+// Specialized function entry/exit trace
+// TODO: make variadic and dump args
 func (log MyLog) Enter() {
-	// Skip 2 on call stack (i.e., this method and the method we are calling)
-	log.dumpInterface(INFO, "ENTER", nil, 2)
-}
-func (log MyLog) Exit() {
-	// Skip 2 on call stack (i.e., this method and the method we are calling)
-	log.dumpInterface(INFO, "EXIT", nil, 2)
+	// TODO: make variadic and dump args
+	log.dumpInterface(TRACE, log.tagEnter, nil, STACK_SKIP)
 }
 
+// TODO: make variadic and dump return values
+func (log MyLog) Exit(values ...interface{}) {
+
+	sb := bytes.NewBufferString(log.tagExit)
+	if len(values) > 0 {
+		sb.WriteByte('(')
+		for index, value := range values {
+			fmt.Printf("value[%d] (%T): %+v\n", index, value, value)
+			switch t := value.(type) {
+			case int:
+			case uint:
+			case int32:
+			case int64:
+			case uint64:
+				fmt.Println("Type is an integer:", t)
+			case float32:
+			case float64:
+				fmt.Println("Type is a float:", t)
+			case string:
+				fmt.Println("Type is a string:", t)
+			case nil:
+				fmt.Println("Type is nil.")
+			case bool:
+				fmt.Println("Type is a bool:", t)
+			default:
+				fmt.Printf("Type is unknown!: %v\n", t)
+			}
+
+		}
+		sb.WriteByte(')')
+	}
+
+	log.dumpInterface(TRACE, sb.String(), nil, STACK_SKIP)
+}
+
+// TODO: add error type to variadic method handling
+func (log MyLog) ExitError(err error) {
+	log.dumpInterface(TRACE, "EXIT", err, STACK_SKIP)
+}
+
+// compose log output using a bytebuffer for performance
 func (log MyLog) dumpInterface(lvl Level, tag string, value interface{}, skip int) {
 
+	// Do not recurse, but allow for debugging of this function directly
+	// TODO: see if we can reuse format/pattern used below
 	if log.logLevel == DEBUG {
-		fmt.Printf("dumpInterface(): %s\n", DumpStruct("logger", log))
+		fmt.Printf("dumpInterface(): %s\n", log.DumpStruct("logger", log))
 	}
 
 	// retrieve all the info we might need
@@ -135,6 +188,7 @@ func (log MyLog) dumpInterface(lvl Level, tag string, value interface{}, skip in
 		if tag != "" {
 			sb.WriteString(fmt.Sprintf(": %s", tag))
 		}
+
 		// Append (optional) value
 		if value != nil {
 			sb.WriteString(fmt.Sprintf(": %+v", value))
@@ -147,7 +201,7 @@ func (log MyLog) dumpInterface(lvl Level, tag string, value interface{}, skip in
 	}
 }
 
-func DumpStruct(structName string, field interface{}) error {
+func (log MyLog) DumpStruct(structName string, field interface{}) error {
 
 	formattedStruct, err := FormatStruct(structName, field)
 	if err != nil {
@@ -157,14 +211,14 @@ func DumpStruct(structName string, field interface{}) error {
 	return nil
 }
 
-func DumpArgs() {
+func (log MyLog) DumpArgs() {
 	args := os.Args
 	for i, a := range args {
 		fmt.Printf("os.Arg[%d]: `%v`\n", i, a)
 	}
 }
 
-func DumpSeparator(sep byte, repeat int) error {
+func (log MyLog) DumpSeparator(sep byte, repeat int) error {
 	if repeat <= 80 {
 		sb := bytes.NewBufferString("")
 		for i := 0; i < repeat; i++ {

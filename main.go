@@ -22,6 +22,7 @@ import (
 
 	"github.com/mrutkows/sbom-utility/cmd"
 	"github.com/mrutkows/sbom-utility/log"
+	"github.com/mrutkows/sbom-utility/utils"
 )
 
 // Struct used to hold tagged (release) build information
@@ -38,24 +39,27 @@ var (
 )
 
 func init() {
+	logger = log.NewLogger()
+	logger.SetLevel(log.TRACE)
+	logger.Trace(fmt.Sprintf("Logger (%T) created: with Level=`%v`", logger, logger.GetLevelName()))
 
+	// Copy program package vars into command flags
+	utils.Flags.Project = Project
+	utils.Flags.Binary = Binary
+	utils.Flags.Version = Version
+}
+
+func printWelcome() {
+	echo := fmt.Sprintf("Welcome to the %s! Version `%s` (%s)\n", Project, Version, Binary)
+	logger.Info(echo)
+	logger.DumpSeparator('=', len(echo))
 }
 
 func main() {
-	logger = log.NewLogger()
-	logger.Trace("", fmt.Sprintf("Logger created: %v (%T)", logger, logger))
-	logger.SetLevel(log.TRACE)
 	logger.Enter()
-
-	echo := fmt.Sprintf("Welcome to the %s! Version `%s` (%s)\n", Project, Version, Binary)
-	fmt.Print(echo)
-	log.DumpSeparator('=', len(echo))
+	printWelcome()
 
 	// Use Cobra convention and execute top-level command
 	cmd.Execute(logger)
-
-	schema := cmd.SCHEMA_SPDX_2_2_2_LOCAL
-	cmd.Validate(schema, "")
-
 	logger.Exit()
 }
