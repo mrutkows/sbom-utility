@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "main.go", // "program": "${file}",
-            "args": ["validate", "-i", "examples/example1/example1.json"]
+            "args": ["validate", "-i", "examples/spdx/example1/example1.json"]
         },
     ]
 }

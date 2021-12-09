@@ -8,9 +8,11 @@ import (
 
 type MyFlags struct {
 	// Not flags, but "main" package var copies
-	Project string
-	Binary  string
-	Version string
+	Project    string
+	Binary     string
+	Version    string
+	WorkingDir string
+	ExecDir    string
 
 	// persistent flags (common to all commands)
 	Verbose      bool // Verbose logging

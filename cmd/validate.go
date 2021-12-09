@@ -55,15 +55,11 @@ func validateCmdImpl(cmd *cobra.Command, args []string) error {
 func unMarshallSBOM(filename string) error {
 
 	// Open our jsonFile
-	ex, err := os.Executable()
-	loggers.Trace(fmt.Sprintf("ex : %v\n", ex))
-	loggers.Trace(fmt.Sprintf("ex : %v\n", ex))
-
-	wd, err := os.Getwd()
-	loggers.Trace(fmt.Sprintf("wd : %v\n", wd))
-
-	fullFilename := wd + "/" + filename
-
+	var fullFilename = filename
+	// Conditionally append working directory if no abs. path detected
+	if len(filename) > 0 && filename[0] != '/' {
+		fullFilename = utils.Flags.WorkingDir + "/" + filename
+	}
 	jsonFile, err := os.Open(fullFilename)
 
 	// if we os.Open returns an error then handle it
@@ -84,10 +80,16 @@ func unMarshallSBOM(filename string) error {
 	var result map[string]interface{}
 
 	// Unmarshal or Decode the JSON to the interface.
-	json.Unmarshal([]byte(rawBytes), &result)
+	errUnmarshal := json.Unmarshal([]byte(rawBytes), &result)
+	if errUnmarshal != nil {
+		loggers.Error(errUnmarshal)
+	}
+
+	spdxVersion := result["spdxVersion"].(string)
+	loggers.Trace(fmt.Sprintf("spdxVersion=`%s`", spdxVersion))
 
 	// Print the data type of result variable
-	fmt.Println(reflect.TypeOf(result))
+	loggers.Debug(fmt.Sprintf("%s\n", reflect.TypeOf(result)))
 
 	return nil
 }
@@ -121,6 +123,6 @@ func Validate(schema string, document string) (bool, error) {
 		loggers.ExitError(err)
 		return false, err
 	}
-	loggers.Exit(true, 1, 2.0)
+	loggers.Exit()
 	return true, nil
 }

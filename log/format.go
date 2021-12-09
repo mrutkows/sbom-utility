@@ -1,10 +1,32 @@
 package log
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
+
+	// "github.com/fatih/color" // TODO: colorize formatted JSON
+
+	"github.com/hokaccha/go-prettyjson"
 )
+
+func FormatMap(mapName string, field map[string]interface{}) (string, error) {
+
+	var sb strings.Builder
+
+	if reflect.ValueOf(field).Kind() != reflect.Map {
+		return "", fmt.Errorf("invalid `Map`; actual Type: (%v)", reflect.TypeOf(field))
+	}
+
+	// m is a map[string]interface.
+	// loop over keys and values in the map.
+	for k, v := range field {
+		fmt.Println(k, "value is", v)
+	}
+
+	return sb.String(), nil
+}
 
 func FormatStruct(structName string, field interface{}) (string, error) {
 
@@ -18,6 +40,8 @@ func FormatStruct(structName string, field interface{}) (string, error) {
 	flagNames := reflect.TypeOf(field)
 	numNames := flagNames.NumField()
 
+	// TODO: optionally, colorize keys/values
+	// e.g., keys=white, string=green, floats/ints=cyan, bool=yellow, nil=magenta
 	if numNames > 0 {
 		flagValues := reflect.ValueOf(field)
 		var name string
@@ -35,5 +59,26 @@ func FormatStruct(structName string, field interface{}) (string, error) {
 		sb.WriteString("\t<empty>\n")
 	}
 	sb.WriteString("  }\n")
+
 	return sb.String(), nil
+}
+
+// Output: {"ID":1,"Name":"Reds","Colors":["Crimson","Red","Ruby","Maroon"]}
+// TODO: make variadic (for optional indent param) and call "Marshal" or "MarshalIndent"
+func FormatInterfaceAsJson(a interface{}) string {
+	out, err := json.Marshal(a)
+	if err == nil {
+		return string(out)
+	}
+	return ""
+}
+
+// Note: "go-prettyjson" colorizes output for shell output
+func FormatInterfaceAsPrettyJson(rawData interface{}) (string, error) {
+	formatter := prettyjson.NewFormatter()
+	bytes, err := formatter.Marshal(rawData)
+	if err != nil {
+		return fmt.Sprintf("unable to marshal data of type (%T)", rawData), err
+	}
+	return string(bytes), nil
 }

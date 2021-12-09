@@ -19,6 +19,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/mrutkows/sbom-utility/cmd"
 	"github.com/mrutkows/sbom-utility/log"
@@ -47,6 +48,10 @@ func init() {
 	utils.Flags.Project = Project
 	utils.Flags.Binary = Binary
 	utils.Flags.Version = Version
+
+	// Capture environment
+	utils.Flags.WorkingDir, _ = os.Getwd()
+	utils.Flags.ExecDir, _ = os.Executable()
 }
 
 func printWelcome() {

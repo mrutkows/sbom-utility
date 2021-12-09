@@ -8,12 +8,15 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 type Level int
 
 // Skip 2 on call stack
-// i.e., skip public (Caller) method (e.g., "Trace()" and internal "dumpInterface()" function
+// i.e., skip public (Caller) method (e.g., "Trace()" and internal
+// "dumpInterface()" function
 const STACK_SKIP int = 2
 
 // WARNING: some functional logic may assume incremental ordering of levels
@@ -25,12 +28,17 @@ const (
 	DEBUG                // 4 - Also, output internal logic and data (timestamps included)
 )
 
+// TODO: colorize log prefixes (e.g., warning=yellow, error=red)
+// WARNING: Allow colorization to be a configurable option for
+// human-readable targets (e.g., stdout, stderr, etc.) even a default (on);
+// however, do NOT colorize if output is (file, network) stream
+// See colors here: https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
 var LevelNames = map[Level]string{
-	DEBUG:   "debug",
-	ERROR:   "error",
-	INFO:    "info",
-	TRACE:   "trace",
-	WARNING: "warning",
+	DEBUG:   color.GreenString("debug"),
+	TRACE:   color.CyanString("trace"),
+	INFO:    color.WhiteString("info"),
+	WARNING: color.HiYellowString("warning"),
+	ERROR:   color.HiRedString("error"),
 }
 
 var DEFAULT_LEVEL = TRACE
