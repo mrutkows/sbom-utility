@@ -28,10 +28,9 @@ const (
 	DEBUG                // 4 - Also, output internal logic and data (timestamps included)
 )
 
-// TODO: colorize log prefixes (e.g., warning=yellow, error=red)
-// WARNING: Allow colorization to be a configurable option for
-// human-readable targets (e.g., stdout, stderr, etc.) even a default (on);
-// however, do NOT colorize if output is (file, network) stream
+// TODO: Allow colorization to be a configurable option.
+// on (default): for human-readable targets (e.g., console);
+// off: for (remote) logging targets (file, network) stream
 // See colors here: https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
 var LevelNames = map[Level]string{
 	DEBUG:   color.GreenString("debug"),

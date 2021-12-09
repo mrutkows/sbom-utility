@@ -6,8 +6,6 @@ import (
 	"reflect"
 	"strings"
 
-	// "github.com/fatih/color" // TODO: colorize formatted JSON
-
 	"github.com/hokaccha/go-prettyjson"
 )
 
@@ -40,7 +38,7 @@ func FormatStruct(structName string, field interface{}) (string, error) {
 	flagNames := reflect.TypeOf(field)
 	numNames := flagNames.NumField()
 
-	// TODO: optionally, colorize keys/values
+	// TODO: optionally, colorize keys/values; see "github.com/fatih/color" package
 	// e.g., keys=white, string=green, floats/ints=cyan, bool=yellow, nil=magenta
 	if numNames > 0 {
 		flagValues := reflect.ValueOf(field)
