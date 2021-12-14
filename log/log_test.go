@@ -1,11 +1,3 @@
-package log
-
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -22,6 +14,14 @@ import (
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package log
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 // Test constructors
 func TestNewDefaultLogger(t *testing.T) {
