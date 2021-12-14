@@ -27,7 +27,6 @@ import (
 )
 
 var ProjectLogger *log.MiniLogger
-var ProjectLogger2 *log.MiniLogger
 
 const (
 	FLAG_TRACE                 = "trace"
