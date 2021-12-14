@@ -1,7 +1,6 @@
 package log
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,10 +23,13 @@ import (
  * limitations under the License.
  */
 
-// Test DumpStruct method will error on Arrays
-func TestDumpStructError(t *testing.T) {
-	logger := NewLogger()
-	logger.SetLevel(TRACE)
-	err := logger.DumpStruct("os.Args", os.Args)
-	assert.NotNil(t, err)
+// Test constructors
+func TestNewDefaultLogger(t *testing.T) {
+	logger := NewDefaultLogger()
+	assert.NotNil(t, logger)
+}
+
+func TestNewLogger(t *testing.T) {
+	logger := NewLogger(TRACE)
+	assert.NotNil(t, logger)
 }

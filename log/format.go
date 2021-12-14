@@ -20,7 +20,7 @@ func FormatMap(mapName string, field map[string]interface{}) (string, error) {
 	// m is a map[string]interface.
 	// loop over keys and values in the map.
 	for k, v := range field {
-		fmt.Println(k, "value is", v)
+		sb.WriteString(fmt.Sprintf("[%s]: %+v", k, v))
 	}
 
 	return sb.String(), nil
@@ -35,8 +35,8 @@ func FormatStruct(structName string, field interface{}) (string, error) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("  %s (%s) = {\n", structName, reflect.TypeOf(field)))
 
-	flagNames := reflect.TypeOf(field)
-	numNames := flagNames.NumField()
+	structNames := reflect.TypeOf(field)
+	numNames := structNames.NumField()
 
 	// TODO: optionally, colorize keys/values; see "github.com/fatih/color" package
 	// e.g., keys=white, string=green, floats/ints=cyan, bool=yellow, nil=magenta
@@ -47,8 +47,16 @@ func FormatStruct(structName string, field interface{}) (string, error) {
 		var fieldType string
 
 		for i := 0; i < numNames; i++ {
-			name = flagNames.Field(i).Name
-			value = flagValues.Field(i)
+			name = structNames.Field(i).Name
+			// TODO: using the .String() method interace reduces `[]byte` values
+			// to "<[]uint8 Value>"; if you remove it, you see ALL the bytes
+			// A better solution might be to show the first 'x' bytes (slice/truncate)
+			value = flagValues.Field(i).String()
+
+			//fmt.Printf("%t\n", reflect.Type.Field(i))
+
+			// reflect.ValueOf(flagValues.Field(i)).Kind() == reflect.Array
+
 			fieldType = fmt.Sprintf("(%+v)", flagValues.Field(i).Type())
 			line := fmt.Sprintf("\t%12s %-10s %s %v\n", name, fieldType, ":", value)
 			sb.WriteString(line)

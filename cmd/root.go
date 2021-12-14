@@ -9,11 +9,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var loggers log.MyLog
+var ProjectLogger *log.MiniLogger
+var ProjectLogger2 *log.MiniLogger
 
 const (
-	FLAG_VERBOSE               = "verbose"
-	FLAG_VERBOSE_SHORT         = "v"
+	FLAG_TRACE                 = "trace"
+	FLAG_TRACE_SHORT           = "t"
+	FLAG_DEBUG                 = "debug"
+	FLAG_DEBUG_SHORT           = "d"
 	FLAG_FILENAME_INPUT        = "input-file"
 	FLAG_FILENAME_INPUT_SHORT  = "i"
 	FLAG_FILENAME_OUTPUT       = "output-file"
@@ -22,51 +25,76 @@ const (
 
 var rootCmd = &cobra.Command{
 	Use:           utils.Flags.Project,
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	Short:         "Root Short Desc.",
-	Long:          "Root Long Desc.",
+	SilenceErrors: false, // TODO: investigate if we should use
+	SilenceUsage:  false, // TODO: investigate if we should use
+	Short:         "Software Bill-of-Materials (SBOM) base utility.",
+	Long:          "This utility serves as centralized command line interface into various Software Bill-of-Materials (SBOM) helper utilities.",
 	RunE:          RootCmdImpl,
-}
-
-func RootCmdImpl(cmd *cobra.Command, args []string) error {
-	loggers.Enter()
-	//fmt.Printf("cmd: %+v\nargs: %v\n", cmd, args)
-	loggers.Exit()
-	return nil
 }
 
 // initialize the module; primarily, initialize cobra
 func init() {
-	loggers.Enter()
+	ProjectLogger = log.NewLogger(log.TRACE)
+	ProjectLogger.Enter()
 
 	// Tell Cobra what our Cobra "init" call back method is
 	cobra.OnInitialize(initConfig)
 
 	// Declare top-level, persistent flags and where to place the post-parse values
-	rootCmd.PersistentFlags().BoolVarP(&utils.Flags.Verbose, FLAG_VERBOSE, FLAG_VERBOSE_SHORT, false, "Verbose output (i.e., INFO")
-	rootCmd.PersistentFlags().StringVarP(&utils.Flags.InputFile, FLAG_FILENAME_INPUT, FLAG_FILENAME_INPUT_SHORT, "", "Input filename")
-	rootCmd.PersistentFlags().StringVarP(&utils.Flags.OutputFile, FLAG_FILENAME_OUTPUT, FLAG_FILENAME_OUTPUT_SHORT, "", "Output filename")
-	loggers.Exit()
+	// TODO: move command help strings to (centralized) constants for better editing/translation across all files
+	//rootCmd.PersistentFlags().BoolVarP(nil, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().BoolVarP(&utils.Flags.Trace, FLAG_TRACE, FLAG_TRACE_SHORT, false, "enable trace logging")
+	rootCmd.PersistentFlags().BoolVarP(&utils.Flags.Debug, FLAG_DEBUG, FLAG_DEBUG_SHORT, false, "enable debug logging")
+	rootCmd.PersistentFlags().StringVarP(&utils.Flags.InputFile, FLAG_FILENAME_INPUT, FLAG_FILENAME_INPUT_SHORT, "", "input filename")
+	rootCmd.PersistentFlags().StringVarP(&utils.Flags.OutputFile, FLAG_FILENAME_OUTPUT, FLAG_FILENAME_OUTPUT_SHORT, "", "output filename")
+	ProjectLogger.Exit()
 }
 
 func initConfig() {
-	loggers.Enter()
-	err := loggers.DumpStruct("utils.Flags", utils.Flags)
-	if err != nil {
-		loggers.Error(err.Error())
+	ProjectLogger.Enter()
+
+	// Update log level
+	if utils.Flags.Debug {
+		ProjectLogger.SetLevel(log.DEBUG)
+	} else if utils.Flags.Trace {
+		// debug level implies trace
+		ProjectLogger.SetLevel(log.TRACE)
 	}
-	loggers.Exit()
+
+	// Print global flags in debug mode
+	flagInfo, err := log.FormatStruct("Flags", utils.Flags)
+	if err != nil {
+		ProjectLogger.Error(err.Error())
+	} else {
+		ProjectLogger.Debug(flagInfo)
+	}
+
+	// Print logger settings in debug mode
+	logInfo, err2 := log.FormatStruct("Flags", utils.Flags)
+	if err2 != nil {
+		ProjectLogger.Error(err2.Error())
+	} else {
+		ProjectLogger.Debug(logInfo)
+	}
+	ProjectLogger.Exit()
 }
 
-func Execute(programLogger log.MyLog) {
+func RootCmdImpl(cmd *cobra.Command, args []string) error {
+	ProjectLogger.Enter()
+	//fmt.Printf("cmd: %+v\nargs: %v\n", cmd, args)
+	ProjectLogger.Exit()
+	return nil
+}
+
+func Execute() {
 	// instead of creating a dependency on the "main" module
-	loggers = programLogger
-	loggers.Enter()
+	ProjectLogger.Enter()
 	if err := rootCmd.Execute(); err != nil {
-		// TODO:
+		// TODO: use log errors
+		// TODO: invalid command (empty); display help
+		rootCmd.Help()
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	loggers.Exit()
+	ProjectLogger.Exit()
 }

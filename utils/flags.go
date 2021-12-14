@@ -15,7 +15,8 @@ type MyFlags struct {
 	ExecDir    string
 
 	// persistent flags (common to all commands)
-	Verbose      bool // Verbose logging
+	Trace        bool // trace logging
+	Debug        bool // debug logging
 	InputFile    string
 	InputFormat  string
 	OutputFile   string

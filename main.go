@@ -23,6 +23,7 @@ import (
 
 	"github.com/mrutkows/sbom-utility/cmd"
 	"github.com/mrutkows/sbom-utility/log"
+	"github.com/mrutkows/sbom-utility/schema"
 	"github.com/mrutkows/sbom-utility/utils"
 )
 
@@ -34,15 +35,20 @@ var (
 	// public
 	Project = "sbom-utility"
 	Binary  = "unset"
-	Version = "X"
-	// package private
-	logger log.MyLog
+	Version = "x.y.z"
+	Logger  *log.MiniLogger
 )
 
 func init() {
-	logger = log.NewLogger()
-	logger.SetLevel(log.TRACE)
-	logger.Trace(fmt.Sprintf("Logger (%T) created: with Level=`%v`", logger, logger.GetLevelName()))
+	// TODO: allow default log level (for init() trace) to be set by LDFLAGS
+	Logger = log.NewLogger(log.TRACE)
+	// TODO: Perhaps add `-i` info flag to allow explicit control
+	// Set default log-level to only output basic informational execution feedback
+	Logger.SetLevel(log.INFO)
+	Logger.Trace(fmt.Sprintf("Logger (%T) created: with Level=`%v`", Logger, Logger.GetLevelName()))
+
+	cmd.ProjectLogger = Logger
+	schema.ProjectLogger = Logger
 
 	// Copy program package vars into command flags
 	utils.Flags.Project = Project
@@ -56,15 +62,15 @@ func init() {
 
 func printWelcome() {
 	echo := fmt.Sprintf("Welcome to the %s! Version `%s` (%s)\n", Project, Version, Binary)
-	logger.Info(echo)
-	logger.DumpSeparator('=', len(echo))
+	Logger.DumpString(echo)
+	Logger.DumpSeparator('=', len(echo))
 }
 
 func main() {
-	logger.Enter()
+	Logger.Enter()
 	printWelcome()
 
 	// Use Cobra convention and execute top-level command
-	cmd.Execute(logger)
-	logger.Exit()
+	cmd.Execute()
+	Logger.Exit()
 }

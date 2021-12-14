@@ -40,9 +40,9 @@ var LevelNames = map[Level]string{
 	ERROR:   color.HiRedString("error"),
 }
 
-var DEFAULT_LEVEL = TRACE
+var DEFAULT_LEVEL = INFO
 
-type MyLog struct {
+type MiniLogger struct {
 	logLevel      Level
 	indentEnabled bool
 	indentSpaces  uint
@@ -51,8 +51,8 @@ type MyLog struct {
 	tagExit       string
 }
 
-func NewLogger() MyLog {
-	return MyLog{
+func NewDefaultLogger() *MiniLogger {
+	return &MiniLogger{
 		logLevel:      DEFAULT_LEVEL,
 		indentEnabled: false,
 		indentSpaces:  2,
@@ -62,170 +62,158 @@ func NewLogger() MyLog {
 	}
 }
 
-func (log *MyLog) SetLevel(level Level) {
+func NewLogger(level Level) *MiniLogger {
+	newLogger := NewDefaultLogger()
+	newLogger.SetLevel(level)
+	return newLogger
+}
+
+func (log *MiniLogger) SetLevel(level Level) {
 	log.logLevel = level
 }
 
-func (log *MyLog) GetLevel() Level {
+func (log *MiniLogger) GetLevel() Level {
 	return log.logLevel
 }
 
-func (log *MyLog) GetLevelName() string {
+func (log *MiniLogger) GetLevelName() string {
 	return LevelNames[log.logLevel]
 }
 
-func (log *MyLog) SetIndentSpaces(spaces uint) {
+func (log *MiniLogger) SetIndentSpaces(spaces uint) {
 	// Put some sensible limit on spaces
 	if spaces > 8 {
 		log.indentSpaces = spaces
 	}
 }
 
-func (log MyLog) Trace(value interface{}) {
+func (log MiniLogger) Trace(value interface{}) {
 	log.dumpInterface(TRACE, "", value, STACK_SKIP)
 }
 
-func (log MyLog) Debug(value interface{}) {
+func (log MiniLogger) Debug(value interface{}) {
 	log.dumpInterface(DEBUG, "", value, STACK_SKIP)
 }
 
-func (log MyLog) Info(value interface{}) {
+func (log MiniLogger) Info(value interface{}) {
 	log.dumpInterface(INFO, "", value, STACK_SKIP)
 }
 
-func (log MyLog) Warning(value interface{}) {
+func (log MiniLogger) Warning(value interface{}) {
 	log.dumpInterface(WARNING, "", value, STACK_SKIP)
 }
 
 // TODO: use fmt.fError ins some manner and/or os.Stderr
-func (log MyLog) Error(value interface{}) {
+func (log MiniLogger) Error(value interface{}) {
 	log.dumpInterface(ERROR, "", value, STACK_SKIP)
 }
 
 // Specialized function entry/exit trace
 // TODO: make variadic and dump args
-func (log MyLog) Enter() {
+func (log MiniLogger) Enter() {
 	// TODO: make variadic and dump args
 	log.dumpInterface(TRACE, log.tagEnter, nil, STACK_SKIP)
 }
 
-// TODO: make variadic and dump return values
-func (log MyLog) Exit(values ...interface{}) {
+// exit and print returned values (typed)
+func (log MiniLogger) Exit(values ...interface{}) {
 
 	sb := bytes.NewBufferString(log.tagExit)
 	if len(values) > 0 {
 		sb.WriteByte('(')
 		for index, value := range values {
-			fmt.Printf("value[%d] (%T): %+v\n", index, value, value)
-			switch t := value.(type) {
-			case int:
-			case uint:
-			case int32:
-			case int64:
-			case uint64:
-				fmt.Println("Type is an integer:", t)
-			case float32:
-			case float64:
-				fmt.Println("Type is a float:", t)
-			case string:
-				fmt.Println("Type is a string:", t)
-			case nil:
-				fmt.Println("Type is nil.")
-			case bool:
-				fmt.Println("Type is a bool:", t)
-			default:
-				fmt.Printf("Type is unknown!: %v\n", t)
+			// TODO: if type is `error`, highlight/colorize (bright red)
+			sb.WriteString(fmt.Sprintf("(%T):%+v", value, value))
+			if (index + 1) < len(values) {
+				sb.WriteString(", ")
 			}
 
 		}
 		sb.WriteByte(')')
 	}
-
 	log.dumpInterface(TRACE, sb.String(), nil, STACK_SKIP)
 }
 
-// TODO: add error type to variadic method handling
-func (log MyLog) ExitError(err error) {
-	log.dumpInterface(TRACE, "EXIT", err, STACK_SKIP)
-}
-
+// Note: currently, "dump" methods output directly to stdout (stderr)
 // compose log output using a bytebuffer for performance
-func (log MyLog) dumpInterface(lvl Level, tag string, value interface{}, skip int) {
+func (log MiniLogger) dumpInterface(lvl Level, tag string, value interface{}, skip int) {
 
-	// Do not recurse, but allow for debugging of this function directly
-	// TODO: see if we can reuse format/pattern used below
-	if log.logLevel == DEBUG {
-		fmt.Printf("dumpInterface(): %s\n", log.DumpStruct("logger", log))
-	}
+	if lvl <= log.logLevel {
+		// retrieve all the info we might need
+		pc, fn, line, ok := runtime.Caller(skip)
 
-	// retrieve all the info we might need
-	pc, fn, line, ok := runtime.Caller(skip)
+		// TODO: create a logging package that can indent based upon stack size
+		// Note: the "Callers()" method will not append() so allocate a large array
+		// var mystack []uintptr = make([]uintptr, 10)
+		// stacksize := runtime.Callers(0, mystack)
+		//fmt.Printf("stacksize=%v\n", stacksize)
 
-	// TODO: create a logging package that can indent based upon stack size
-	// Note: the "Callers()" method will not append() so allocate a large array
-	// var mystack []uintptr = make([]uintptr, 10)
-	// stacksize := runtime.Callers(0, mystack)
-	//fmt.Printf("stacksize=%v\n", stacksize)
+		// TODO: Provide means to order component output;
+		// for example, to add Timestamp component first (on each line) before Level
+		if ok {
+			// Setup "string builder" and initialize with log-level prefix
+			sb := bytes.NewBufferString(fmt.Sprintf("[%s] ", LevelNames[lvl]))
 
-	// TODO: Provide means to order component output;
-	// for example, to add Timestamp component first (on each line) before Level
-	if ok {
-		// Setup "string builder" and initialize with log-level prefix
-		sb := bytes.NewBufferString(fmt.Sprintf("[%s] ", LevelNames[lvl]))
+			// Append UTC timestamp if TRACE (or DEBUG) enabled
+			if lvl == TRACE || lvl == DEBUG {
+				// UTC time shows fractions of a second
+				// TODO: add setting to show milli or micro seconds supported by "time" package
+				tmp := time.Now().UTC().String()
+				// create a (left) slice of the timestamp omitting the " +0000 UTC" portion
+				//ts = fmt.Sprintf("[%s] ", tmp[:strings.Index(tmp, "+")-1])
+				sb.WriteString(fmt.Sprintf("[%s] ", tmp[:strings.Index(tmp, "+")-1]))
+			}
 
-		// Append UTC timestamp if TRACE (or DEBUG) enabled
-		if lvl == TRACE || lvl == DEBUG {
-			// UTC time shows fractions of a second
-			// TODO: add setting to show milli or micro seconds supported by "time" package
-			tmp := time.Now().UTC().String()
-			// create a (left) slice of the timestamp omitting the " +0000 UTC" portion
-			//ts = fmt.Sprintf("[%s] ", tmp[:strings.Index(tmp, "+")-1])
-			sb.WriteString(fmt.Sprintf("[%s] ", tmp[:strings.Index(tmp, "+")-1]))
+			// Append basic filename, line number, function name
+			basicFile := fn[strings.LastIndex(fn, "/")+1:]
+			function := runtime.FuncForPC(pc)
+			// TODO: add logger flag to show full module paths (not just module.function)
+			basicModFnName := function.Name()[strings.LastIndex(function.Name(), "/")+1:]
+
+			sb.WriteString(fmt.Sprintf("%s(%d) %s()", basicFile, line, basicModFnName))
+
+			// Append (optional) tag
+			if tag != "" {
+				sb.WriteString(fmt.Sprintf(": %s", tag))
+			}
+
+			// Append (optional) value
+			if value != nil {
+				sb.WriteString(fmt.Sprintf(": %+v", value))
+			}
+			// TODO: use a general output writer (set to stdout, stderr, or filestream)
+			fmt.Println(sb.String())
+		} else {
+			os.Stderr.WriteString("Error: Unable to retrieve call stack. Exiting...")
+			os.Exit(-2)
 		}
-
-		// Append basic filename, line number, function name
-		basicFile := fn[strings.LastIndex(fn, "/")+1:]
-		function := runtime.FuncForPC(pc)
-		// TODO: add logger flag to show full module paths (not just module.function)
-		basicModFnName := function.Name()[strings.LastIndex(function.Name(), "/")+1:]
-
-		sb.WriteString(fmt.Sprintf("%s(%d) %s()", basicFile, line, basicModFnName))
-
-		// Append (optional) tag
-		if tag != "" {
-			sb.WriteString(fmt.Sprintf(": %s", tag))
-		}
-
-		// Append (optional) value
-		if value != nil {
-			sb.WriteString(fmt.Sprintf(": %+v", value))
-		}
-		// TODO: use a general output writer (set to stdout, stderr, or filestream)
-		fmt.Println(sb.String())
-	} else {
-		os.Stderr.WriteString("Error: Unable to retrieve call stack. Exiting...")
-		os.Exit(-2)
 	}
 }
 
-func (log MyLog) DumpStruct(structName string, field interface{}) error {
+func (log MiniLogger) DumpString(value string) {
+	fmt.Print(value)
+}
+
+func (log MiniLogger) DumpStruct(structName string, field interface{}) error {
 
 	formattedStruct, err := FormatStruct(structName, field)
 	if err != nil {
 		return err
 	}
+	// TODO: print to output stream
 	fmt.Print(formattedStruct)
 	return nil
 }
 
-func (log MyLog) DumpArgs() {
+func (log MiniLogger) DumpArgs() {
 	args := os.Args
 	for i, a := range args {
+		// TODO: print to output stream
 		fmt.Printf("os.Arg[%d]: `%v`\n", i, a)
 	}
 }
 
-func (log MyLog) DumpSeparator(sep byte, repeat int) error {
+func (log MiniLogger) DumpSeparator(sep byte, repeat int) error {
 	if repeat <= 80 {
 		sb := bytes.NewBufferString("")
 		for i := 0; i < repeat; i++ {
