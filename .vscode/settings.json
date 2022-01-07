@@ -4,6 +4,7 @@
             "gojsonschema",
             "LDFLAGS",
             "parms",
-            "SBOM"
+            "SBOM",
+            "unmarshalling"
       ]
 }

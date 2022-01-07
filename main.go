@@ -41,12 +41,14 @@ var (
 
 func init() {
 	// TODO: allow default log level (for init() trace) to be set by LDFLAGS
-	Logger = log.NewLogger(log.TRACE)
+	// For now, set to INFO here...
 	// TODO: Perhaps add `-i` info flag to allow explicit control
+	//Logger.SetLevel(log.INFO)
 	// Set default log-level to only output basic informational execution feedback
-	Logger.SetLevel(log.INFO)
+	Logger = log.NewLogger(log.INFO)
 	Logger.Trace(fmt.Sprintf("Logger (%T) created: with Level=`%v`", Logger, Logger.GetLevelName()))
 
+	// Provide access to project logger to other modules
 	cmd.ProjectLogger = Logger
 	schema.ProjectLogger = Logger
 

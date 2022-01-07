@@ -49,8 +49,14 @@ var rootCmd = &cobra.Command{
 }
 
 // initialize the module; primarily, initialize cobra
+// NOTE: the "cmd" module is problematic as we actually are required to
+// use init() to configure Cobra.  So if we want to debug that init(),
+// that module actually has to create a logger simply for init() and the
+// initConfig() callback.
 func init() {
-	ProjectLogger = log.NewLogger(log.TRACE)
+	// TODO: use LDFLAGS to turn on "TRACE" (and require creation of a Logger)
+	// ONLY if needed to debug init() methods in the "cmd" package
+	ProjectLogger = log.NewLogger(log.INFO)
 	ProjectLogger.Enter()
 
 	// Tell Cobra what our Cobra "init" call back method is
@@ -58,11 +64,11 @@ func init() {
 
 	// Declare top-level, persistent flags and where to place the post-parse values
 	// TODO: move command help strings to (centralized) constants for better editing/translation across all files
-	//rootCmd.PersistentFlags().BoolVarP(nil, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&utils.Flags.Trace, FLAG_TRACE, FLAG_TRACE_SHORT, false, "enable trace logging")
 	rootCmd.PersistentFlags().BoolVarP(&utils.Flags.Debug, FLAG_DEBUG, FLAG_DEBUG_SHORT, false, "enable debug logging")
 	rootCmd.PersistentFlags().StringVarP(&utils.Flags.InputFile, FLAG_FILENAME_INPUT, FLAG_FILENAME_INPUT_SHORT, "", "input filename")
 	rootCmd.PersistentFlags().StringVarP(&utils.Flags.OutputFile, FLAG_FILENAME_OUTPUT, FLAG_FILENAME_OUTPUT_SHORT, "", "output filename")
+
 	ProjectLogger.Exit()
 }
 

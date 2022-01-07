@@ -62,17 +62,21 @@ func validateCmdImpl(cmd *cobra.Command, args []string) error {
 func Validate() (bool, error) {
 	ProjectLogger.Enter()
 
-	document := schema.NewSbom()
-	ProjectLogger.Info(fmt.Sprintf("Validating file [%s]...\n", utils.Flags.InputFile))
-	document.UnmarshalSBOM(utils.Flags.InputFile)
+	document := schema.NewSbom(utils.Flags.InputFile)
+	ProjectLogger.Info(fmt.Sprintf("Validating file [%s]...", utils.Flags.InputFile))
+	document.UnmarshalSBOM() // i.e., utils.Flags.InputFile
 
 	u, _ := log.FormatStruct("", document)
 	fmt.Printf("%s\n", u)
 
-	loader := gojsonschema.NewReferenceLoader(schema.SCHEMA_SPDX_2_2_2_LOCAL)
+	// Load schema based upon document declarations of schema format and version
+	var schemaURL = schema.SCHEMA_SPDX_2_2_2_LOCAL
+	ProjectLogger.Info(fmt.Sprintf("Loading schema [%s]...", schemaURL))
+	loader := gojsonschema.NewReferenceLoader(schemaURL)
 
 	// create a reusable schema object (to validate multiple documents)
 	_, err := gojsonschema.NewSchema(loader)
+	ProjectLogger.Info(fmt.Sprintf("Schema [%s] loaded.", schemaURL))
 
 	if err != nil {
 		ProjectLogger.Error(err)
@@ -81,42 +85,3 @@ func Validate() (bool, error) {
 	ProjectLogger.Exit(true)
 	return true, nil
 }
-
-// func unMarshallSBOM(filename string) error {
-// 	// Open our jsonFile
-// 	var fullFilename = filename
-// 	// Conditionally append working directory if no abs. path detected
-// 	if len(filename) > 0 && filename[0] != '/' {
-// 		fullFilename = utils.Flags.WorkingDir + "/" + filename
-// 	}
-// 	jsonFile, err := os.Open(fullFilename)
-// 	// if we os.Open returns an error then handle it
-// 	if err != nil {
-// 		cmdlogger.Error(err)
-// 		os.Exit(-1)
-// 	}
-// 	cmdlogger.Info(fmt.Sprintf("Successfully Opened: `%s`", filename))
-
-// 	// defer the closing of our jsonFile so that we can parse it later on
-// 	defer jsonFile.Close()
-
-// 	// read our opened jsonFile as a byte array.
-// 	rawBytes, _ := ioutil.ReadAll(jsonFile)
-
-// 	// Declared an empty map interface
-// 	var result map[string]interface{}
-
-// 	// Unmarshal or Decode the JSON to the interface.
-// 	errUnmarshal := json.Unmarshal([]byte(rawBytes), &result)
-// 	if errUnmarshal != nil {
-// 		cmdlogger.Error(errUnmarshal)
-// 	}
-
-// 	spdxVersion := result["spdxVersion"].(string)
-// 	cmdlogger.Trace(fmt.Sprintf("spdxVersion=`%s`", spdxVersion))
-
-// 	// Print the data type of result variable
-// 	cmdlogger.Debug(fmt.Sprintf("%s\n", reflect.TypeOf(result)))
-
-// 	return nil
-// }

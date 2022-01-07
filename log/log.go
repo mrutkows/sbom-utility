@@ -36,6 +36,8 @@ type Level int
 // "dumpInterface()" function
 const STACK_SKIP int = 2
 
+const MAX_INDENT uint = 8
+
 // WARNING: some functional logic may assume incremental ordering of levels
 const (
 	ERROR   Level = iota // 0 - Always output errors (stop execution)
@@ -50,11 +52,11 @@ const (
 // off: for (remote) logging targets (file, network) stream
 // See colors here: https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
 var LevelNames = map[Level]string{
-	DEBUG:   color.GreenString("debug"),
-	TRACE:   color.CyanString("trace"),
-	INFO:    color.WhiteString("info"),
-	WARNING: color.HiYellowString("warning"),
-	ERROR:   color.HiRedString("error"),
+	DEBUG:   color.GreenString("DEBUG"),
+	TRACE:   color.CyanString("TRACE"),
+	INFO:    color.WhiteString("INFO"),
+	WARNING: color.HiYellowString("WARN"),
+	ERROR:   color.HiRedString("ERROR"),
 }
 
 var DEFAULT_LEVEL = INFO
@@ -99,7 +101,7 @@ func (log *MiniLogger) GetLevelName() string {
 
 func (log *MiniLogger) SetIndentSpaces(spaces uint) {
 	// Put some sensible limit on spaces
-	if spaces > 8 {
+	if spaces < MAX_INDENT {
 		log.indentSpaces = spaces
 	}
 }
@@ -156,14 +158,15 @@ func (log MiniLogger) Exit(values ...interface{}) {
 func (log MiniLogger) dumpInterface(lvl Level, tag string, value interface{}, skip int) {
 
 	if lvl <= log.logLevel {
-		// retrieve all the info we might need
-		pc, fn, line, ok := runtime.Caller(skip)
 
 		// TODO: create a logging package that can indent based upon stack size
 		// Note: the "Callers()" method will not append() so allocate a large array
 		// var mystack []uintptr = make([]uintptr, 10)
 		// stacksize := runtime.Callers(0, mystack)
 		//fmt.Printf("stacksize=%v\n", stacksize)
+
+		// retrieve all the info we might need
+		pc, fn, line, ok := runtime.Caller(skip)
 
 		// TODO: Provide means to order component output;
 		// for example, to add Timestamp component first (on each line) before Level
@@ -173,6 +176,7 @@ func (log MiniLogger) dumpInterface(lvl Level, tag string, value interface{}, sk
 
 			// Append UTC timestamp if TRACE (or DEBUG) enabled
 			if lvl == TRACE || lvl == DEBUG {
+
 				// UTC time shows fractions of a second
 				// TODO: add setting to show milli or micro seconds supported by "time" package
 				tmp := time.Now().UTC().String()

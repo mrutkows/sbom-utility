@@ -31,13 +31,13 @@ import (
 var ProjectLogger *log.MiniLogger
 
 // Standard
-type Standard uint
+// type Standard uint
 
-const (
-	STANDARD_UNKNOWN = iota
-	STANDARD_SPDX
-	STANDARD_CYCLONEDX
-)
+// const (
+// 	STANDARD_UNKNOWN = iota
+// 	STANDARD_SPDX
+// 	STANDARD_CYCLONEDX
+// )
 
 // Supported schemas will be identified (or "keyed") uniquely using values:
 // - Format ID (e.g., "SPDXRef-DOCUMENT", "CycloneDX") - identifies the format/standard
@@ -101,6 +101,17 @@ type SchemaKeyPropertyNames struct {
 	propVersion string
 }
 
+var knownStandards = []SchemaKeyPropertyNames{
+	{
+		PROPKEY_ID_SPDX,
+		PROPKEY_VERSION_SPDX,
+	},
+	{
+		PROPKEY_ID_CYCLONEDX,
+		PROPKEY_VERSION_CYCLONEDX,
+	},
+}
+
 // Unique Identifier for an SBOM schema
 type SchemaKey struct {
 	formatId      string
@@ -110,8 +121,8 @@ type SchemaKey struct {
 
 // Internal representation of SBOM schema
 type Schema struct {
-	key       SchemaKey // Key values may be useful to downstream processors
-	standard  Standard
+	key SchemaKey // Key values may be useful to downstream processors
+	// standard  Standard
 	schemaURL string
 }
 
@@ -119,15 +130,16 @@ type Schema struct {
 // account flexibility (based upon several documented benchmarks).
 // Only concatenated keys (of same literal type) might perform better,
 // but are much less idiomatic and prone to key construction errors.
-var KnownSchemas = map[SchemaKey]Schema{
+
+var knownSchemas = map[SchemaKey]Schema{
 	{ID_SPDX, VERSION_SPDX_2_2, false}: {
-		key:       SchemaKey{ID_SPDX, VERSION_SPDX_2_2, false},
-		standard:  STANDARD_SPDX,
+		key: SchemaKey{ID_SPDX, VERSION_SPDX_2_2, false},
+		//standard:  STANDARD_SPDX,
 		schemaURL: SCHEMA_SPDX_2_2_2_LOCAL,
 	},
 	{ID_CYCLONEDX, VERSION_CYCLONEDX_1_3, false}: {
-		key:       SchemaKey{ID_CYCLONEDX, VERSION_CYCLONEDX_1_3, false},
-		standard:  STANDARD_CYCLONEDX,
+		key: SchemaKey{ID_CYCLONEDX, VERSION_CYCLONEDX_1_3, false},
+		//standard:  STANDARD_CYCLONEDX,
 		schemaURL: SCHEMA_CYCLONEDX_1_3_LOCAL,
 	},
 }
@@ -137,32 +149,72 @@ type Sbom struct {
 	absFilename string
 	rawBytes    []byte
 	jsonMap     map[string]interface{}
-	standard    Standard
-	schemaId    string
+	schema      Schema
 }
 
-func NewSbom() *Sbom {
-	temp := Sbom{
-		filename: "",
-		standard: STANDARD_UNKNOWN,
-		schemaId: "",
+// type iSchema interface {
+// 	getFormatKey()
+// 	getFormatValue()
+// 	getVersionKey()
+// 	getVersionValue()
+// }
+
+func NewSchemaKey(id string, version string, strict bool) *SchemaKey {
+	// TODO: is it possible (or necessary) to validate id, version args.
+	return &SchemaKey{
+		formatId:      id,
+		schemaVersion: version,
+		strict:        strict,
 	}
-	temp.jsonMap = make(map[string]interface{})
+}
+
+func NewSbom(inputfile string) *Sbom {
+	temp := Sbom{
+		filename: inputfile,
+		// standard: STANDARD_UNKNOWN,
+		// schemaId: "",
+	}
+	// Allocate a map for unmarshalling the raw JSON data
+	//temp.jsonMap = make(map[string]interface{})
 	return &temp
 }
 
-func (sbom *Sbom) UnmarshalSBOM(filename string) error {
+func (sbom *Sbom) GetKeyValueAsString(key string) (string, error) {
+	ProjectLogger.Enter()
+	if (sbom.jsonMap) == nil {
+		err := fmt.Errorf("document object does not have a Map allocated")
+		ProjectLogger.Error(err)
+		return "", err
+	}
+	value := sbom.jsonMap[key]
 
-	// Open our jsonFile
-	sbom.filename = filename
+	if value == nil {
+		ProjectLogger.Warning(fmt.Sprintf("key: `%s` not found in document map", key))
+		return "", nil
+	}
+
+	ProjectLogger.Exit(value)
+	return value.(string), nil
+}
+
+func (sbom *Sbom) UnmarshalSBOM() error {
+	ProjectLogger.Enter()
+
+	// validate filename
+	if len(sbom.filename) == 0 {
+		return fmt.Errorf("schema: invalid SBOM filename: `%s`", sbom.filename)
+	}
 
 	// Conditionally append working directory if no abs. path detected
-	if len(filename) > 0 && filename[0] != '/' {
-		sbom.absFilename = utils.Flags.WorkingDir + "/" + filename
+	if len(sbom.filename) > 0 && sbom.filename[0] != '/' {
+		sbom.absFilename = utils.Flags.WorkingDir + "/" + sbom.filename
+	} else {
+		sbom.absFilename = sbom.filename
 	}
+	// Open our jsonFile
 	jsonFile, err := os.Open(sbom.absFilename)
 
-	// if we os.Open returns an error then handle it
+	// if input file cannot be opened, log it and terminate
 	if err != nil {
 		ProjectLogger.Error(err)
 		os.Exit(-1)
@@ -174,15 +226,9 @@ func (sbom *Sbom) UnmarshalSBOM(filename string) error {
 	defer jsonFile.Close()
 
 	// read our opened jsonFile as a byte array.
-	//	rawBytes, _ := ioutil.ReadAll(jsonFile)
-	//	fmt.Printf("rawBytes=[%p]\n", &rawBytes)
-	//	sbom.rawBytes = rawBytes
-	//sbom.rawBytes
 	sbom.rawBytes, _ = ioutil.ReadAll(jsonFile)
-	fmt.Printf("rawBytes=[%p]\n", &(sbom.rawBytes))
-
-	// Declared an empty map interface
-	//var result map[string]interface{}
+	ProjectLogger.Trace(fmt.Sprintf("&rawBytes=[%p]", &(sbom.rawBytes)))
+	ProjectLogger.Trace(fmt.Sprintf("rawBytes[:100]=[%s]", sbom.rawBytes[:100]))
 
 	// Attempt to unmarshal the prospective JSON document to a map
 	sbom.jsonMap = make(map[string]interface{})
@@ -193,11 +239,26 @@ func (sbom *Sbom) UnmarshalSBOM(filename string) error {
 
 	// Detect required identifying schema elements and values
 	// for SPDX and CycloneDX schemas
-	spdxVersion := sbom.jsonMap["spdxVersion"].(string)
-	ProjectLogger.Trace(fmt.Sprintf("spdxVersion=`%s`", spdxVersion))
+	docId, _ := sbom.GetKeyValueAsString(PROPKEY_ID_SPDX)
+	ProjectLogger.Trace(fmt.Sprintf("%s=`%s`", PROPKEY_ID_SPDX, docId))
+
+	docVersion, _ := sbom.GetKeyValueAsString(PROPKEY_VERSION_SPDX)
+	ProjectLogger.Info(fmt.Sprintf("%s=`%s`", PROPKEY_VERSION_SPDX, docVersion))
 
 	// Print the data type of result variable
-	ProjectLogger.Trace(fmt.Sprintf("%s\n", reflect.TypeOf(sbom.jsonMap)))
+	ProjectLogger.Info(fmt.Sprintf("sbom.jsonMap(%s)", reflect.TypeOf(sbom.jsonMap)))
+	ProjectLogger.Exit()
+	return nil
+}
 
+func (sbom *Sbom) IdentifyFormat() error {
+	ProjectLogger.Enter()
+	ProjectLogger.Exit()
+	return nil
+}
+
+func (sbom *Sbom) LoadSchema() error {
+	ProjectLogger.Enter()
+	ProjectLogger.Exit()
 	return nil
 }
