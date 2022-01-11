@@ -151,11 +151,36 @@ func (sbom *Sbom) FindFormatAndSchema() (bool, error) {
 		formatValue, _ := sbom.GetKeyValueAsString(format.PropertyKeyFormat)
 		fmt.Printf("formatValue=%s, PropertyValueFormat=%s", formatValue, format.PropertyValueFormat)
 		if formatValue == format.PropertyValueFormat {
-			fmt.Println("MATCH!")
+			fmt.Println("MATCH! ")
+			versionValue, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
+			// TODO: IFF exists then search to see if this schema version is known
+			sbom.findSchema(format, versionValue)
 			return true, nil
 		} else {
 			fmt.Println("Try again!")
 		}
+	}
+
+	ProjectLogger.Exit()
+	return false, nil
+}
+
+func (sbom *Sbom) findSchema(format SchemaFormat, version string) (bool, error) {
+	ProjectLogger.Enter()
+
+	// Iterate over known formats to see if SBOM document contains a known value
+	for _, schema := range format.Schemas {
+
+		// See if the schema version key exists and is a known value
+		fmt.Printf("schema=%v", schema)
+		curSchemaVersion, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
+		fmt.Printf("version=%s, PropertyValueVersion=%s", version, curSchemaVersion)
+		// if formatValue == format.PropertyValueFormat {
+		// 	fmt.Println("MATCH!")
+		// 	return true, nil
+		// } else {
+		// 	fmt.Println("Try again!")
+		// }
 	}
 
 	ProjectLogger.Exit()
