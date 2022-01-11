@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/mrutkows/sbom-utility/log"
+	"github.com/mrutkows/sbom-utility/schema"
 	"github.com/mrutkows/sbom-utility/utils"
 	"github.com/spf13/cobra"
 )
@@ -98,6 +99,14 @@ func initConfig() {
 	} else {
 		ProjectLogger.Debug(logInfo)
 	}
+
+	// Load application configuration files
+	// i.e., Format/Schemas in this case
+	errCfg := schema.LoadFormatBasedSchemas("config.json")
+	if errCfg != nil {
+		ProjectLogger.Error(errCfg.Error())
+	}
+
 	ProjectLogger.Exit()
 }
 

@@ -52,43 +52,34 @@ type SchemaConfig struct {
 	Formats []SchemaFormat `json:"formats"`
 }
 
-var Config SchemaConfig
-
-// The prospective JSON document MUST include (at least) these 2 property names
-// to be a prospective match for a known SBOM schema
-// If both property names are found, then their respective values can be used
-// to construct a key (i.e., the SchemaKey) into our hashmap of declared schemas
-// type SchemaKeyPropertyNames struct {
-// 	propFormat  string
-// 	propVersion string
-// }
-
-// var knownStandards = []SchemaKeyPropertyNames{
-// 	{
-// 		PROPKEY_ID_SPDX,
-// 		PROPKEY_VERSION_SPDX,
-// 	},
-// 	{
-// 		PROPKEY_ID_CYCLONEDX,
-// 		PROPKEY_VERSION_CYCLONEDX,
-// 	},
-// }
+// TODO: use a Hash map to look up known schemas using the following `SchemaKey`
 
 // Unique Identifier for an SBOM schema
 // The prospective JSON document MUST include (at least) 2 identifying property names
 // to be a prospective match for a known SBOM schema
 // If both property names are found, then their respective values can be used
 // to construct a key (i.e., the SchemaKey) into our hashmap of declared schemas
-type SchemaKey struct {
-	formatId      string
-	schemaVersion string
-	strict        bool
-}
+// type SchemaKey struct {
+// 	formatId      string
+// 	schemaVersion string
+// 	strict        bool
+// }
+
+// TODO: look into creating a schema interface
+// func NewSchemaKey(id string, version string, strict bool) *SchemaKey {
+// 	// TODO: is it possible (or necessary) to validate id, version args.
+// 	return &SchemaKey{
+// 		formatId:      id,
+// 		schemaVersion: version,
+// 		strict:        strict,
+// 	}
+// }
 
 // Struct keys, on average, provide best performance taking into
 // account flexibility (based upon several documented benchmarks).
 // Only concatenated keys (of same literal type) might perform better,
 // but are much less idiomatic and prone to key construction errors.
+// For example:
 // var knownSchemas = map[SchemaKey]SchemaInstance{
 // 	{ID_SPDX, VERSION_SPDX_2_2, false}: {
 // 		version: VERSION_SPDX_2_2,
@@ -108,16 +99,6 @@ type Sbom struct {
 	rawBytes    []byte
 	jsonMap     map[string]interface{}
 	schema      SchemaInstance
-}
-
-// TODO: look into creating a schema interface
-func NewSchemaKey(id string, version string, strict bool) *SchemaKey {
-	// TODO: is it possible (or necessary) to validate id, version args.
-	return &SchemaKey{
-		formatId:      id,
-		schemaVersion: version,
-		strict:        strict,
-	}
 }
 
 func NewSbom(inputfile string) *Sbom {

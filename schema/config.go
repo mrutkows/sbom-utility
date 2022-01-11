@@ -25,15 +25,18 @@ import (
 	"github.com/mrutkows/sbom-utility/utils"
 )
 
-var cfgFilename string
+var KnownSchemas SchemaConfig
 
-func (sbom *Sbom) LoadConfig(filename string) error {
+func LoadFormatBasedSchemas(filename string) error {
 	ProjectLogger.Enter()
+
+	var cfgFilename string
 
 	// validate filename
 	if len(filename) == 0 {
 		return fmt.Errorf("config: invalid filename: `%s`", filename)
 	}
+
 	// Conditionally append working directory if no abs. path detected
 	if len(filename) > 0 && filename[0] != '/' {
 		cfgFilename = utils.Flags.WorkingDir + "/" + filename
@@ -45,7 +48,7 @@ func (sbom *Sbom) LoadConfig(filename string) error {
 	if err != nil {
 		return fmt.Errorf("config: unable to `ReadFile`: `%s`", cfgFilename)
 	}
-	err = json.Unmarshal(buffer, &Config)
+	err = json.Unmarshal(buffer, &KnownSchemas)
 	if err != nil {
 		return fmt.Errorf("config: cannot `Unmarshal`: `%s`", cfgFilename)
 	}
