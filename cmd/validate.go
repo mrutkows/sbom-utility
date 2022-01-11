@@ -85,16 +85,29 @@ func Validate() (bool, error) {
 	// TODO: support "force" schema (flag) to force validation against a specific version (i.e., override version declared in document)
 	var schemaURL = document.SchemaInfo.File
 	ProjectLogger.Info(fmt.Sprintf("Loading schema [%s]...", schemaURL))
-	loader := gojsonschema.NewReferenceLoader(schemaURL)
+	schemaLoader := gojsonschema.NewReferenceLoader(schemaURL)
 
 	// create a reusable schema object (to validate multiple documents)
-	_, err := gojsonschema.NewSchema(loader)
+	schema, err := gojsonschema.NewSchema(schemaLoader)
 	ProjectLogger.Info(fmt.Sprintf("Schema [%s] loaded.", schemaURL))
 
 	if err != nil {
 		ProjectLogger.Error(err)
 		return false, err
 	}
-	ProjectLogger.Exit(true)
-	return true, nil
+
+	// Create a JSON load for the actual document
+	documentLoader := gojsonschema.NewReferenceLoader("file://" + utils.Flags.InputFile)
+
+	result, errValidate := schema.Validate(documentLoader)
+
+	if errValidate != nil {
+		ProjectLogger.Error(errValidate)
+		return false, errValidate
+	}
+
+	ProjectLogger.Info(fmt.Sprintf("Result [%t] loaded.", result.Valid()))
+
+	ProjectLogger.Exit(result.Valid())
+	return result.Valid(), nil
 }
