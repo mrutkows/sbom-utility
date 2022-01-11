@@ -39,9 +39,8 @@ var validateCmd = &cobra.Command{
 	Short: "validate input file against its declared SBOM schema.",
 	Long:  "validate input file against its declared SBOM schema, if detectable and supported.",
 	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: Remove once we prove that `RunE` is used if declared vs. inline here
 		ProjectLogger.Enter()
-		// TODO: remove when execution call order satisfactory
-		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		ProjectLogger.Exit()
 	},
 	RunE: validateCmdImpl,
@@ -71,8 +70,20 @@ func Validate() (bool, error) {
 	u, _ := log.FormatStruct("", document)
 	fmt.Printf("%s\n", u)
 
+	// Search the document keys/values for known SBOM formats and schema
+	errFind := document.FindFormatAndSchema()
+
 	// Load schema based upon document declarations of schema format and version
-	var schemaURL = schema.SCHEMA_SPDX_2_2_2_LOCAL
+	if errFind != nil {
+		ProjectLogger.Error(errFind)
+		return false, errFind
+	}
+
+	//var schemaURL = schema.SCHEMA_SPDX_2_2_2_LOCAL
+	// TODO: support remote schema load
+	// TODO: support "latest" schema load (flag) for version (i.e., override version declared in document)
+	// TODO: support "force" schema (flag) to force validation against a specific version (i.e., override version declared in document)
+	var schemaURL = document.SchemaInfo.File
 	ProjectLogger.Info(fmt.Sprintf("Loading schema [%s]...", schemaURL))
 	loader := gojsonschema.NewReferenceLoader(schemaURL)
 

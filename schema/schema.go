@@ -19,6 +19,7 @@ package schema
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -38,6 +39,7 @@ type SchemaInstance struct {
 	File    string `json:"file"`
 	Url     string `json:"url"`
 	Strict  bool   `json:"strict"`
+	Latest  bool   `json:"latest"`
 }
 
 // Representation of SBOM format
@@ -54,21 +56,21 @@ type SchemaConfig struct {
 	Formats []SchemaFormat `json:"formats"`
 }
 
+// Candidate SBOM document (context) information
 type Sbom struct {
 	filename    string
 	absFilename string
 	rawBytes    []byte
 	jsonMap     map[string]interface{}
-	formatInfo  SchemaFormat
-	schemaInfo  SchemaInstance
+	FormatInfo  SchemaFormat
+	SchemaInfo  SchemaInstance
 }
 
 func NewSbom(inputfile string) *Sbom {
 	temp := Sbom{
 		filename: inputfile,
 	}
-	// Allocate a map for unmarshalling the raw JSON data
-	//temp.jsonMap = make(map[string]interface{})
+	// NOTE: the Map is allocated (i.e., using `make`) as part of `UnmarhsalSBOM` method
 	return &temp
 }
 
@@ -132,9 +134,6 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 		ProjectLogger.Error(errUnmarshal)
 	}
 
-	// Search the document keys/values for known SBOM formats and schema
-	sbom.FindFormatAndSchema()
-
 	// Print the data type of result variable
 	ProjectLogger.Info(fmt.Sprintf("sbom.jsonMap(%s)", reflect.TypeOf(sbom.jsonMap)))
 	ProjectLogger.Exit()
@@ -155,15 +154,16 @@ func (sbom *Sbom) FindFormatAndSchema() error {
 
 			// Copy format info into Sbom context
 			// TODO: Support `strict` (default: false) flag matching
-			sbom.formatInfo = format
+			sbom.FormatInfo = format
 			sbom.findSchema(format, versionValue)
 			return nil
 		}
 	}
 
-	ProjectLogger.Error("schema: unknown format.")
+	errFormat := errors.New("schema: unknown format")
+	ProjectLogger.Error(errFormat.Error())
 	ProjectLogger.Exit()
-	return nil
+	return errFormat
 }
 
 func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
@@ -178,13 +178,15 @@ func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 		if version == curSchemaVersion {
 			// TODO: Support `strict` (default: false) flag matching
 			// Copy schema info into Sbom context
-			sbom.schemaInfo = schema
+			sbom.SchemaInfo = schema
 			return nil
 		}
 	}
-	ProjectLogger.Error(fmt.Sprintf("schema: unsupported version `%s` for format `%s`.", version, format.CanonicalName))
+
+	errSchema := fmt.Errorf("schema: unsupported version `%s` for format `%s`", version, format.CanonicalName)
+	ProjectLogger.Error(errSchema.Error())
 	ProjectLogger.Exit()
-	return nil
+	return errSchema
 }
 
 // TODO: use a Hash map to look up known schemas using the following `SchemaKey`

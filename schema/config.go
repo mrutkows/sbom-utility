@@ -51,6 +51,9 @@ func LoadFormatBasedSchemas(filename string) error {
 		return fmt.Errorf("config: cannot `Unmarshal`: `%s`", cfgFilename)
 	}
 
+	// TODO: validate ONLY ONE schema per-minor version is marked `latest`
+	// NOTE: There MAY be 2 "latest" for those that have "strict" flag (true) supported
+
 	ProjectLogger.Exit()
 	return nil
 }
