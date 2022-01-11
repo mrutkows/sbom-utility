@@ -59,7 +59,8 @@ type Sbom struct {
 	absFilename string
 	rawBytes    []byte
 	jsonMap     map[string]interface{}
-	schema      SchemaInstance
+	formatInfo  SchemaFormat
+	schemaInfo  SchemaInstance
 }
 
 func NewSbom(inputfile string) *Sbom {
@@ -140,7 +141,7 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 	return nil
 }
 
-func (sbom *Sbom) FindFormatAndSchema() (bool, error) {
+func (sbom *Sbom) FindFormatAndSchema() error {
 	ProjectLogger.Enter()
 
 	// Iterate over known formats to see if SBOM document contains a known value
@@ -151,40 +152,38 @@ func (sbom *Sbom) FindFormatAndSchema() (bool, error) {
 		formatValue, _ := sbom.GetKeyValueAsString(format.PropertyKeyFormat)
 		fmt.Printf("formatValue=%s, PropertyValueFormat=%s", formatValue, format.PropertyValueFormat)
 		if formatValue == format.PropertyValueFormat {
-			fmt.Println("MATCH! ")
 			versionValue, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
 			// TODO: IFF exists then search to see if this schema version is known
+			// Copy format info into Sbom context
+			sbom.formatInfo = format
 			sbom.findSchema(format, versionValue)
-			return true, nil
-		} else {
-			fmt.Println("Try again!")
+			return nil
 		}
 	}
 
 	ProjectLogger.Exit()
-	return false, nil
+	return nil
 }
 
-func (sbom *Sbom) findSchema(format SchemaFormat, version string) (bool, error) {
+func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 	ProjectLogger.Enter()
 
-	// Iterate over known formats to see if SBOM document contains a known value
+	// Iterate over known schema versions to see if SBOM's version is supported
 	for _, schema := range format.Schemas {
-
-		// See if the schema version key exists and is a known value
 		fmt.Printf("schema=%v", schema)
+		// Compare requested version to current schema version
 		curSchemaVersion, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
-		fmt.Printf("version=%s, PropertyValueVersion=%s", version, curSchemaVersion)
-		// if formatValue == format.PropertyValueFormat {
-		// 	fmt.Println("MATCH!")
-		// 	return true, nil
-		// } else {
-		// 	fmt.Println("Try again!")
-		// }
+		//fmt.Printf("version=%s, PropertyValueVersion=%s", version, curSchemaVersion)
+		if version == curSchemaVersion {
+			ProjectLogger.Info(fmt.Sprintf("Schema version `%s` supported.", version))
+			// Copy schema info into Sbom context
+			sbom.schemaInfo = schema
+			return nil
+		}
 	}
-
+	ProjectLogger.Error(fmt.Sprintf("Schema version `%s` NOT supported.", version))
 	ProjectLogger.Exit()
-	return false, nil
+	return nil
 }
 
 // TODO: use a Hash map to look up known schemas using the following `SchemaKey`
