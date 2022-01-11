@@ -1,4 +1,10 @@
-# SPDX Schemas
+# Schema Formats
 
-JSON Schemas used are from:
-- https://github.com/spdx/spdx-spec/tree/development/v2.2.2/schemas
+Formats MUST be in JSON schema format.
+
+The following schema formats are supported:
+
+| Format Name | Format Key | Format ID | Schema repository |
+| :-- | :-- | :-- | :-- |
+| SPDX | `SPDXID` | `SPDXRef-DOCUMENT` | https://github.com/spdx/spdx-spec |
+| CycloneDX | `bomFormat` | `CycloneDx` | |https://github.com/CycloneDX/specification | 
