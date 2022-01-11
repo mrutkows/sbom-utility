@@ -64,6 +64,14 @@ func Validate() (bool, error) {
 
 	document := schema.NewSbom(utils.Flags.InputFile)
 	ProjectLogger.Info(fmt.Sprintf("Validating file [%s]...", utils.Flags.InputFile))
+
+	errCfg := document.LoadConfig("config.json")
+
+	if errCfg != nil {
+		return false, errCfg
+	}
+
+	// Load the raw, candidate SBOM (file) as JSON data
 	document.UnmarshalSBOM() // i.e., utils.Flags.InputFile
 
 	u, _ := log.FormatStruct("", document)
