@@ -3,5 +3,11 @@
 For convenience, schemas are copied locally from:
 - https://github.com/spdx/spdx-spec/
 
-Note: the "Default" branch is always used for the most current schema.  In our case, we are using the following schema version for testing:
-- https://github.com/spdx/spdx-spec/tree/development/v2.2.2/schemas
+Supported schemas by release (tag):
+| release tag | branch | schema file (git format) |
+| [v2.2.1](https://github.com/spdx/spdx-spec/releases/tag/v2.2.1) | https://github.com/spdx/spdx-spec/tree/v2.2.1 | https://github.com/spdx/spdx-spec/blob/v2.2.1/schemas/spdx-schema.json |
+
+Development branches:
+| branch | schema file (git format) |
+| [https://github.com/spdx/spdx-spec/tree/development/v2.2.2 (default)](https://github.com/spdx/spdx-spec/tree/development/v2.2.2) | https://github.com/spdx/spdx-spec/tree/v2.2.1 | https://github.com/spdx/spdx-spec/blob/v2.2.1/schemas/spdx-schema.json |
+https://raw.githubusercontent.com/CycloneDX/specification/master/schema/bom-1.3-strict.schema.json
