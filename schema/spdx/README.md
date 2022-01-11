@@ -10,5 +10,5 @@ Supported schemas by release (tag):
 
 Development branches:
 | branch | schema file (git format) |
-| :-- | :-- | :-- |
-| [https://github.com/spdx/spdx-spec/tree/development/v2.2.2 (default)](https://github.com/spdx/spdx-spec/tree/development/v2.2.2) |  | |
+| :-- | :-- | 
+| https://github.com/spdx/spdx-spec/tree/development/v2.2.2 (default) | https://github.com/spdx/spdx-spec/blob/development/v2.2.2/schemas/spdx-schema.json |
