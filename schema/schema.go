@@ -148,19 +148,20 @@ func (sbom *Sbom) FindFormatAndSchema() error {
 	for _, format := range KnownSchemas.Formats {
 
 		// See if the format identifier key exists and is a known value
-		fmt.Printf("format=%v", format)
 		formatValue, _ := sbom.GetKeyValueAsString(format.PropertyKeyFormat)
-		fmt.Printf("formatValue=%s, PropertyValueFormat=%s", formatValue, format.PropertyValueFormat)
+
 		if formatValue == format.PropertyValueFormat {
 			versionValue, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
-			// TODO: IFF exists then search to see if this schema version is known
+
 			// Copy format info into Sbom context
+			// TODO: Support `strict` (default: false) flag matching
 			sbom.formatInfo = format
 			sbom.findSchema(format, versionValue)
 			return nil
 		}
 	}
 
+	ProjectLogger.Error("schema: unknown format.")
 	ProjectLogger.Exit()
 	return nil
 }
@@ -170,18 +171,18 @@ func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 
 	// Iterate over known schema versions to see if SBOM's version is supported
 	for _, schema := range format.Schemas {
-		fmt.Printf("schema=%v", schema)
+
 		// Compare requested version to current schema version
 		curSchemaVersion, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
-		//fmt.Printf("version=%s, PropertyValueVersion=%s", version, curSchemaVersion)
+
 		if version == curSchemaVersion {
-			ProjectLogger.Info(fmt.Sprintf("Schema version `%s` supported.", version))
+			// TODO: Support `strict` (default: false) flag matching
 			// Copy schema info into Sbom context
 			sbom.schemaInfo = schema
 			return nil
 		}
 	}
-	ProjectLogger.Error(fmt.Sprintf("Schema version `%s` NOT supported.", version))
+	ProjectLogger.Error(fmt.Sprintf("schema: unsupported version `%s` for format `%s`.", version, format.CanonicalName))
 	ProjectLogger.Exit()
 	return nil
 }
