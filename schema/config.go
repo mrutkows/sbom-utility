@@ -25,8 +25,6 @@ import (
 	"github.com/mrutkows/sbom-utility/utils"
 )
 
-var KnownSchemas SchemaConfig
-
 func LoadFormatBasedSchemas(filename string) error {
 	ProjectLogger.Enter()
 

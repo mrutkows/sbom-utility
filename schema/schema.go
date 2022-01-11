@@ -29,6 +29,7 @@ import (
 )
 
 var ProjectLogger *log.MiniLogger
+var KnownSchemas SchemaConfig
 
 // Representation of SBOM schema instance
 type SchemaInstance struct {
@@ -41,57 +42,17 @@ type SchemaInstance struct {
 
 // Representation of SBOM format
 type SchemaFormat struct {
-	FormatId           string           `json:"formatId"`
-	PropertyKeyFormat  string           `json:"propertyKeyFormat"`
-	PropertyKeyVersion string           `json:"propertyKeyVersion"`
-	Schemas            []SchemaInstance `json:"schemas"`
+	CanonicalName       string           `json:"canonicalName"`
+	PropertyKeyFormat   string           `json:"propertyKeyFormat"`
+	PropertyKeyVersion  string           `json:"propertyKeyVersion"`
+	PropertyValueFormat string           `json:"propertyValueFormat"`
+	Schemas             []SchemaInstance `json:"schemas"`
 }
 
 // Config
 type SchemaConfig struct {
 	Formats []SchemaFormat `json:"formats"`
 }
-
-// TODO: use a Hash map to look up known schemas using the following `SchemaKey`
-
-// Unique Identifier for an SBOM schema
-// The prospective JSON document MUST include (at least) 2 identifying property names
-// to be a prospective match for a known SBOM schema
-// If both property names are found, then their respective values can be used
-// to construct a key (i.e., the SchemaKey) into our hashmap of declared schemas
-// type SchemaKey struct {
-// 	formatId      string
-// 	schemaVersion string
-// 	strict        bool
-// }
-
-// TODO: look into creating a schema interface
-// func NewSchemaKey(id string, version string, strict bool) *SchemaKey {
-// 	// TODO: is it possible (or necessary) to validate id, version args.
-// 	return &SchemaKey{
-// 		formatId:      id,
-// 		schemaVersion: version,
-// 		strict:        strict,
-// 	}
-// }
-
-// Struct keys, on average, provide best performance taking into
-// account flexibility (based upon several documented benchmarks).
-// Only concatenated keys (of same literal type) might perform better,
-// but are much less idiomatic and prone to key construction errors.
-// For example:
-// var knownSchemas = map[SchemaKey]SchemaInstance{
-// 	{ID_SPDX, VERSION_SPDX_2_2, false}: {
-// 		version: VERSION_SPDX_2_2,
-// 		file:    SCHEMA_SPDX_2_2_2_LOCAL,
-// 		url:     SCHEMA_SPDX_2_2_2_REMOTE,
-// 	},
-// 	{ID_CYCLONEDX, VERSION_CYCLONEDX_1_3, false}: {
-// 		version: VERSION_CYCLONEDX_1_3,
-// 		file:    SCHEMA_CYCLONEDX_1_3_LOCAL,
-// 		url:     SCHEMA_CYCLONEDX_1_3_REMOTE,
-// 	},
-// }
 
 type Sbom struct {
 	filename    string
@@ -158,6 +119,7 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 	defer jsonFile.Close()
 
 	// read our opened jsonFile as a byte array.
+	// TODO: check for error
 	sbom.rawBytes, _ = ioutil.ReadAll(jsonFile)
 	ProjectLogger.Trace(fmt.Sprintf("&rawBytes=[%p]", &(sbom.rawBytes)))
 	ProjectLogger.Trace(fmt.Sprintf("rawBytes[:100]=[%s]", sbom.rawBytes[:100]))
@@ -169,13 +131,8 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 		ProjectLogger.Error(errUnmarshal)
 	}
 
-	// Detect required identifying schema elements and values
-	// for SPDX and CycloneDX schemas
-	docId, _ := sbom.GetKeyValueAsString(PROPKEY_ID_SPDX)
-	ProjectLogger.Trace(fmt.Sprintf("%s=`%s`", PROPKEY_ID_SPDX, docId))
-
-	docVersion, _ := sbom.GetKeyValueAsString(PROPKEY_VERSION_SPDX)
-	ProjectLogger.Info(fmt.Sprintf("%s=`%s`", PROPKEY_VERSION_SPDX, docVersion))
+	// Search the document keys/values for known SBOM formats and schema
+	sbom.FindFormatAndSchema()
 
 	// Print the data type of result variable
 	ProjectLogger.Info(fmt.Sprintf("sbom.jsonMap(%s)", reflect.TypeOf(sbom.jsonMap)))
@@ -183,14 +140,65 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 	return nil
 }
 
-func (sbom *Sbom) IdentifyFormat() error {
+func (sbom *Sbom) FindFormatAndSchema() (bool, error) {
 	ProjectLogger.Enter()
+
+	// Iterate over known formats to see if SBOM document contains a known value
+	for _, format := range KnownSchemas.Formats {
+
+		// See if the format identifier key exists and is a known value
+		fmt.Printf("format=%v", format)
+		formatValue, _ := sbom.GetKeyValueAsString(format.PropertyKeyFormat)
+		fmt.Printf("formatValue=%s, PropertyValueFormat=%s", formatValue, format.PropertyValueFormat)
+		if formatValue == format.PropertyValueFormat {
+			fmt.Println("MATCH!")
+			return true, nil
+		} else {
+			fmt.Println("Try again!")
+		}
+	}
+
 	ProjectLogger.Exit()
-	return nil
+	return false, nil
 }
 
-func (sbom *Sbom) LoadSchema() error {
-	ProjectLogger.Enter()
-	ProjectLogger.Exit()
-	return nil
-}
+// TODO: use a Hash map to look up known schemas using the following `SchemaKey`
+
+// Unique Identifier for an SBOM schema
+// The prospective JSON document MUST include (at least) 2 identifying property names
+// to be a prospective match for a known SBOM schema
+// If both property names are found, then their respective values can be used
+// to construct a key (i.e., the SchemaKey) into our hashmap of declared schemas
+// type SchemaKey struct {
+// 	formatId      string
+// 	schemaVersion string
+// 	strict        bool
+// }
+
+// TODO: look into creating a schema interface
+// func NewSchemaKey(id string, version string, strict bool) *SchemaKey {
+// 	// TODO: is it possible (or necessary) to validate id, version args.
+// 	return &SchemaKey{
+// 		formatId:      id,
+// 		schemaVersion: version,
+// 		strict:        strict,
+// 	}
+// }
+
+// Struct keys, on average, provide best performance taking into
+// account flexibility (based upon several documented benchmarks).
+// Only concatenated keys (of same literal type) might perform better,
+// but are much less idiomatic and prone to key construction errors.
+// For example:
+// var knownSchemas = map[SchemaKey]SchemaInstance{
+// 	{ID_SPDX, VERSION_SPDX_2_2, false}: {
+// 		version: VERSION_SPDX_2_2,
+// 		file:    SCHEMA_SPDX_2_2_2_LOCAL,
+// 		url:     SCHEMA_SPDX_2_2_2_REMOTE,
+// 	},
+// 	{ID_CYCLONEDX, VERSION_CYCLONEDX_1_3, false}: {
+// 		version: VERSION_CYCLONEDX_1_3,
+// 		file:    SCHEMA_CYCLONEDX_1_3_LOCAL,
+// 		url:     SCHEMA_CYCLONEDX_1_3_REMOTE,
+// 	},
+// }

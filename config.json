@@ -1,9 +1,10 @@
 {
       "formats": [
             {
-            "formatId": "SPDX",
+            "canonicalName": "SPDX",
             "propertyKeyFormat": "SPDXID",
             "propertyKeyVersion": "spdxVersion",
+            "propertyValueFormat": "SPDXRef-DOCUMENT",
             "schemas": [
                   {
                         "version": "SPDX-2.2",
@@ -14,9 +15,10 @@
             ]
             },
             {
-            "formatId": "CycloneDX",
+            "canonicalName": "CycloneDX",
             "propertyKeyFormat": "bomFormat",
             "propertyKeyVersion": "specVersion",
+            "propertyValueFormat": "CycloneDX",
             "schemas": [
                   {
                         "version": "1.3",
