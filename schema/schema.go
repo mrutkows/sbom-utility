@@ -52,7 +52,7 @@ type SchemaConfig struct {
 	Formats []SchemaFormat `json:"formats"`
 }
 
-var config SchemaConfig
+var Config SchemaConfig
 
 // The prospective JSON document MUST include (at least) these 2 property names
 // to be a prospective match for a known SBOM schema
@@ -145,36 +145,6 @@ func (sbom *Sbom) GetKeyValueAsString(key string) (string, error) {
 
 	ProjectLogger.Exit(value)
 	return value.(string), nil
-}
-
-func (sbom *Sbom) LoadConfig(filename string) error {
-	ProjectLogger.Enter()
-
-	// validate filename
-	if len(filename) == 0 {
-		return fmt.Errorf("config: invalid filename: `%s`", filename)
-	}
-
-	var cfgFilename string
-
-	// Conditionally append working directory if no abs. path detected
-	if len(filename) > 0 && filename[0] != '/' {
-		cfgFilename = utils.Flags.WorkingDir + "/" + filename
-	} else {
-		cfgFilename = filename
-	}
-
-	buffer, err := ioutil.ReadFile(cfgFilename)
-	if err != nil {
-		return fmt.Errorf("config: unable to `ReadFile`: `%s`", cfgFilename)
-	}
-	err = json.Unmarshal(buffer, &config)
-	if err != nil {
-		return fmt.Errorf("config: cannot `Unmarshal`: `%s`", cfgFilename)
-	}
-
-	ProjectLogger.Exit()
-	return nil
 }
 
 func (sbom *Sbom) UnmarshalSBOM() error {

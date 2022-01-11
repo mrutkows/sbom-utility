@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "showGlobalVariables": true,
             "name": "Launch file",
             "type": "go",
             "request": "launch",
