@@ -1,4 +1,4 @@
-# Schema Formats
+# Supported schema formats
 
 Formats MUST be in JSON schema format.
 
