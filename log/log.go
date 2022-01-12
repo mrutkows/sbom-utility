@@ -129,9 +129,24 @@ func (log MiniLogger) Error(value interface{}) {
 
 // Specialized function entry/exit trace
 // TODO: make variadic and dump args
-func (log MiniLogger) Enter() {
+func (log MiniLogger) Enter(values ...interface{}) {
 	// TODO: make variadic and dump args
-	log.dumpInterface(TRACE, log.tagEnter, nil, STACK_SKIP)
+	//log.dumpInterface(TRACE, log.tagEnter, nil, STACK_SKIP)
+
+	sb := bytes.NewBufferString(log.tagEnter)
+	if len(values) > 0 {
+		sb.WriteByte('(')
+		for index, value := range values {
+			// TODO: if type is `error`, highlight/colorize (bright red)
+			sb.WriteString(fmt.Sprintf("(%T):%+v", value, value))
+			if (index + 1) < len(values) {
+				sb.WriteString(", ")
+			}
+
+		}
+		sb.WriteByte(')')
+	}
+	log.dumpInterface(TRACE, sb.String(), nil, STACK_SKIP)
 }
 
 // exit and print returned values (typed)

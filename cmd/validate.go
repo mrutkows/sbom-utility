@@ -33,15 +33,6 @@ const (
 	INVALID = false
 )
 
-func init() {
-	ProjectLogger.Enter()
-	// Add local flags to validate command
-	validateCmd.Flags().BoolVarP(&utils.Flags.Strict, "strict", "", false, "use `strict` schema when available")
-	validateCmd.Flags().StringVarP(&utils.Flags.OutputFormat, "source", "s", "", "Source directory to read from")
-	rootCmd.AddCommand(validateCmd)
-	ProjectLogger.Exit()
-}
-
 var validateCmd = &cobra.Command{
 	Use:   "validate -i <input-sbom.json>",
 	Short: "validate input file against its declared SBOM schema.",
@@ -49,6 +40,16 @@ var validateCmd = &cobra.Command{
 	// NOTE: `RunE` function takes precedent over `Run` (anonymous) function if both provided
 	// Run: func(cmd *cobra.Command, args []string) {}
 	RunE: validateCmdImpl,
+}
+
+func init() {
+	ProjectLogger.Enter()
+	// Add local flags to validate command
+	validateCmd.Flags().BoolVarP(&utils.Flags.Strict, "strict", "", false, "use `strict` schema when available")
+	// TODO: schema file (override) to use fora validation (instead of inferred schema)
+	validateCmd.Flags().StringVarP(&utils.Flags.JsonSchemaFile, "schema", "", "", "Explicit schema file URL to use for validation")
+	rootCmd.AddCommand(validateCmd)
+	ProjectLogger.Exit()
 }
 
 func validateCmdImpl(cmd *cobra.Command, args []string) error {
@@ -128,6 +129,8 @@ func Validate() (bool, error) {
 	}
 
 	ProjectLogger.Info(fmt.Sprintf("result.Valid(): `%t`.", result.Valid()))
+
+	// TODO: print errors
 
 	ProjectLogger.Exit(result.Valid())
 	return result.Valid(), nil

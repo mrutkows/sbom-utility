@@ -41,7 +41,7 @@ const (
 )
 
 var rootCmd = &cobra.Command{
-	Use:           utils.Flags.Project,
+	Use:           fmt.Sprintf("%s [command] [flags]", utils.Flags.Project),
 	SilenceErrors: false, // TODO: investigate if we should use
 	SilenceUsage:  false, // TODO: investigate if we should use
 	Short:         "Software Bill-of-Materials (SBOM) base utility.",
@@ -112,7 +112,11 @@ func initConfig() {
 
 func RootCmdImpl(cmd *cobra.Command, args []string) error {
 	ProjectLogger.Enter()
-	//fmt.Printf("cmd: %+v\nargs: %v\n", cmd, args)
+	// no commands (empty) passed; display help
+	if len(args) == 0 {
+		cmd.Help()
+		os.Exit(0)
+	}
 	ProjectLogger.Exit()
 	return nil
 }
@@ -122,8 +126,6 @@ func Execute() {
 	ProjectLogger.Enter()
 	if err := rootCmd.Execute(); err != nil {
 		// TODO: use log errors
-		// TODO: invalid command (empty); display help
-		rootCmd.Help()
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
