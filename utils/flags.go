@@ -38,6 +38,9 @@ type MyFlags struct {
 	InputFormat  string
 	OutputFile   string
 	OutputFormat string
+
+	// Validate (local) flags
+	Strict bool
 }
 
 var Flags MyFlags

@@ -28,8 +28,16 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+const (
+	VALID   = true
+	INVALID = false
+)
+
 func init() {
 	ProjectLogger.Enter()
+	// Add local flags to validate command
+	validateCmd.Flags().BoolVarP(&utils.Flags.Strict, "strict", "", false, "use `strict` schema when available")
+	validateCmd.Flags().StringVarP(&utils.Flags.OutputFormat, "source", "s", "", "Source directory to read from")
 	rootCmd.AddCommand(validateCmd)
 	ProjectLogger.Exit()
 }
@@ -38,30 +46,43 @@ var validateCmd = &cobra.Command{
 	Use:   "validate -i <input-sbom.json>",
 	Short: "validate input file against its declared SBOM schema.",
 	Long:  "validate input file against its declared SBOM schema, if detectable and supported.",
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Remove once we prove that `RunE` is used if declared vs. inline here
-		ProjectLogger.Enter()
-		ProjectLogger.Exit()
-	},
+	// NOTE: `RunE` function takes precedent over `Run` (anonymous) function if both provided
+	// Run: func(cmd *cobra.Command, args []string) {}
 	RunE: validateCmdImpl,
 }
 
 func validateCmdImpl(cmd *cobra.Command, args []string) error {
 	ProjectLogger.Enter()
 	isValid, err := Validate()
+
 	if err != nil {
 		ProjectLogger.Error(err)
-		os.Exit(-3)
+		os.Exit(2)
 	}
-	ProjectLogger.Info(fmt.Sprintf("Document %s: valid=[%t]", utils.Flags.InputFile, isValid))
-	ProjectLogger.Exit()
+
+	message := fmt.Sprintf("document `%s`: valid=[%t]", utils.Flags.InputFile, isValid)
+	if isValid {
+		ProjectLogger.Info(message)
+	} else {
+		ProjectLogger.Error(message)
+	}
+
+	ProjectLogger.Exit(isValid)
 	return nil
 }
 
 func Validate() (bool, error) {
 	ProjectLogger.Enter()
+	ProjectLogger.Trace(fmt.Sprintf("utils.Flags.InputFile: `%s`", utils.Flags.InputFile))
+	ProjectLogger.Trace(fmt.Sprintf("utils.Flags.Strict: `%t`", utils.Flags.Strict))
+
+	// check for required fields on command
+	if utils.Flags.InputFile == "" {
+		return INVALID, fmt.Errorf("invalid input file: `%s` ", utils.Flags.InputFile)
+	}
 
 	document := schema.NewSbom(utils.Flags.InputFile)
+
 	ProjectLogger.Info(fmt.Sprintf("Validating file [%s]...", utils.Flags.InputFile))
 
 	// Load the raw, candidate SBOM (file) as JSON data
@@ -76,7 +97,7 @@ func Validate() (bool, error) {
 	// Load schema based upon document declarations of schema format and version
 	if errFind != nil {
 		ProjectLogger.Error(errFind)
-		return false, errFind
+		return INVALID, errFind
 	}
 
 	//var schemaURL = schema.SCHEMA_SPDX_2_2_2_LOCAL
@@ -93,7 +114,7 @@ func Validate() (bool, error) {
 
 	if err != nil {
 		ProjectLogger.Error(err)
-		return false, err
+		return INVALID, err
 	}
 
 	// Create a JSON load for the actual document
@@ -103,10 +124,10 @@ func Validate() (bool, error) {
 
 	if errValidate != nil {
 		ProjectLogger.Error(errValidate)
-		return false, errValidate
+		return INVALID, errValidate
 	}
 
-	ProjectLogger.Info(fmt.Sprintf("Result [%t] loaded.", result.Valid()))
+	ProjectLogger.Info(fmt.Sprintf("result.Valid(): `%t`.", result.Valid()))
 
 	ProjectLogger.Exit(result.Valid())
 	return result.Valid(), nil
