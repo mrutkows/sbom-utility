@@ -94,6 +94,9 @@ func Validate() (bool, error) {
 
 	if utils.Flags.ForcedJsonSchemaFile != "" {
 
+		document.SchemaInfo = *new(schema.SchemaInstance)
+		document.SchemaInfo.File = utils.Flags.ForcedJsonSchemaFile
+		ProjectLogger.Info(fmt.Sprintf("Schema file forced (i.e., `--force %s`)", utils.Flags.ForcedJsonSchemaFile))
 	} else {
 
 		// Search the document keys/values for known SBOM formats and schema
