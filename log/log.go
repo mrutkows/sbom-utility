@@ -172,8 +172,8 @@ func (log MiniLogger) Exit(values ...interface{}) {
 // compose log output using a bytebuffer for performance
 func (log MiniLogger) dumpInterface(lvl Level, tag string, value interface{}, skip int) {
 
+	//fmt.Printf("dumpInterface(): level=%v, loglevel=%v\n", lvl, log.logLevel)
 	if lvl <= log.logLevel {
-
 		// TODO: create a logging package that can indent based upon stack size
 		// Note: the "Callers()" method will not append() so allocate a large array
 		// var mystack []uintptr = make([]uintptr, 10)
@@ -198,15 +198,16 @@ func (log MiniLogger) dumpInterface(lvl Level, tag string, value interface{}, sk
 				// create a (left) slice of the timestamp omitting the " +0000 UTC" portion
 				//ts = fmt.Sprintf("[%s] ", tmp[:strings.Index(tmp, "+")-1])
 				sb.WriteString(fmt.Sprintf("[%s] ", tmp[:strings.Index(tmp, "+")-1]))
+
+				// Append basic filename, line number, function name
+				basicFile := fn[strings.LastIndex(fn, "/")+1:]
+				sb.WriteString(fmt.Sprintf("%s(%d) ", basicFile, line))
 			}
 
-			// Append basic filename, line number, function name
-			basicFile := fn[strings.LastIndex(fn, "/")+1:]
+			// TODO: add logger flag to show full module paths (not just module.function)\
 			function := runtime.FuncForPC(pc)
-			// TODO: add logger flag to show full module paths (not just module.function)
 			basicModFnName := function.Name()[strings.LastIndex(function.Name(), "/")+1:]
-
-			sb.WriteString(fmt.Sprintf("%s(%d) %s()", basicFile, line, basicModFnName))
+			sb.WriteString(fmt.Sprintf("%s()", basicModFnName))
 
 			// Append (optional) tag
 			if tag != "" {
