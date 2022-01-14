@@ -17,17 +17,11 @@
 #
 -->
 
-# SPDX schemas
+# Test cases
 
-For convenience, schemas are copied locally from:
-- https://github.com/spdx/spdx-spec/
+## Functional
 
-Supported schemas by release (tag):
-| release tag | branch | schema file (git format) |
+| Test file | schema | description |
 | :-- | :-- | :-- |
-| [v2.2.1](https://github.com/spdx/spdx-spec/releases/tag/v2.2.1) | https://github.com/spdx/spdx-spec/tree/v2.2.1 | https://github.com/spdx/spdx-spec/blob/v2.2.1/schemas/spdx-schema.json |
-
-Development branches:
-| branch | schema file (git format) |
-| :-- | :-- |
-| [development/v2.2.2](https://github.com/spdx/spdx-spec/tree/development/v2.2.2) (default) | https://github.com/spdx/spdx-spec/blob/development/v2.2.2/schemas/spdx-schema.json |
+| [spdx-min-required.json](spdx-min-required.json) | 2.2 | Unit test with only top-level, req. fields; i.e.,   `"required" : [ "SPDXID", "name", "spdxVersion", "dataLicense", "creationInfo" ]` and for creationInfo: `"required" : [ "created" ],` |
+| [spdx-min-required-missing-creationinfo.json](spdx-min-required-missing-creationinfo.json) | 2.2 | Unit test missing a single, top-level, req. field; i.e.,  missing `"creationInfo"` |

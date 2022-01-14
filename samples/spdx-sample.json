@@ -1,6 +1,0 @@
-{
-	"SPDXID" : {
-	"type" : "string",
-	"description" : "Uniquely identify any element in an SPDX document which may be referenced by other elements."
-	}
-}

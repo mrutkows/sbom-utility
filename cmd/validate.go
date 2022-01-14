@@ -47,7 +47,7 @@ func init() {
 	// Add local flags to validate command
 	validateCmd.Flags().BoolVarP(&utils.Flags.Strict, "strict", "", false, "use `strict` schema when available")
 	// TODO: schema file (override) to use fora validation (instead of inferred schema)
-	validateCmd.Flags().StringVarP(&utils.Flags.JsonSchemaFile, "schema", "", "", "Explicit schema file URL to use for validation")
+	validateCmd.Flags().StringVarP(&utils.Flags.ForcedJsonSchemaFile, "force", "", "", "Explicit JSON schema file URL to force for validation; overrides inferred schema")
 	rootCmd.AddCommand(validateCmd)
 	ProjectLogger.Exit()
 }
@@ -92,16 +92,20 @@ func Validate() (bool, error) {
 	u, _ := log.FormatStruct("", document)
 	fmt.Printf("%s\n", u)
 
-	// Search the document keys/values for known SBOM formats and schema
-	errFind := document.FindFormatAndSchema()
+	if utils.Flags.ForcedJsonSchemaFile != "" {
 
-	// Load schema based upon document declarations of schema format and version
-	if errFind != nil {
-		ProjectLogger.Error(errFind)
-		return INVALID, errFind
+	} else {
+
+		// Search the document keys/values for known SBOM formats and schema
+		errFind := document.FindFormatAndSchema()
+
+		// Load schema based upon document declarations of schema format and version
+		if errFind != nil {
+			ProjectLogger.Error(errFind)
+			return INVALID, errFind
+		}
 	}
 
-	//var schemaURL = schema.SCHEMA_SPDX_2_2_2_LOCAL
 	// TODO: support remote schema load
 	// TODO: support "latest" schema load (flag) for version (i.e., override version declared in document)
 	// TODO: support "force" schema (flag) to force validation against a specific version (i.e., override version declared in document)
@@ -122,15 +126,23 @@ func Validate() (bool, error) {
 	documentLoader := gojsonschema.NewReferenceLoader("file://" + utils.Flags.InputFile)
 
 	result, errValidate := schema.Validate(documentLoader)
+	ProjectLogger.Info(fmt.Sprintf("result.Valid(): `%t`.", result.Valid()))
 
 	if errValidate != nil {
 		ProjectLogger.Error(errValidate)
 		return INVALID, errValidate
 	}
 
-	ProjectLogger.Info(fmt.Sprintf("result.Valid(): `%t`.", result.Valid()))
+	// Log each schema error
+	errs := result.Errors()
+	lenErrs := len(errs)
+	if lenErrs > 0 {
+		ProjectLogger.Error(fmt.Sprintf("Errors detected (%d):", lenErrs))
+		for _, resultError := range errs {
 
-	// TODO: print errors
+			ProjectLogger.Error(resultError)
+		}
+	}
 
 	ProjectLogger.Exit(result.Valid())
 	return result.Valid(), nil

@@ -40,8 +40,8 @@ type MyFlags struct {
 	OutputFormat string
 
 	// Validate (local) flags
-	Strict         bool
-	JsonSchemaFile string
+	Strict               bool
+	ForcedJsonSchemaFile string
 }
 
 var Flags MyFlags

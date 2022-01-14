@@ -5,6 +5,7 @@
             "LDFLAGS",
             "parms",
             "SBOM",
+            "SPDXID",
             "unmarshalling"
       ]
 }

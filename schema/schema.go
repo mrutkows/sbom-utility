@@ -40,6 +40,7 @@ type SchemaInstance struct {
 	Url     string `json:"url"`
 	Strict  bool   `json:"strict"`
 	Latest  bool   `json:"latest"`
+	Variant string `json:"variant"`
 }
 
 // Representation of SBOM format
