@@ -158,7 +158,7 @@
           "description": "The date and time (timestamp) when the document was created."
         },
         "hashes": {
-          "$id": "#/properties/hashes",
+          "$id": "#/tools/properties/hashes",
           "type": "array",
           "items": {"$ref": "#/definitions/hash"},
           "title": "Hashes",
@@ -395,7 +395,7 @@
           "title": "External References"
         },
         "components": {
-          "$id": "#/properties/components",
+          "$id": "#/component/properties/components",
           "type": "array",
           "items": {"$ref": "#/definitions/component"},
           "uniqueItems": true,
@@ -809,7 +809,7 @@
           ]
         },
         "hashes": {
-          "$id": "#/properties/hashes",
+          "$id": "#/externalReference/properties/hashes",
           "type": "array",
           "items": {"$ref": "#/definitions/hash"},
           "title": "Hashes",
@@ -918,9 +918,9 @@
           "title": "External References"
         },
         "services": {
-          "$id": "#/properties/services",
+          "$id": "#service/properties/services",
           "type": "array",
-          "items": {"$ref": "#/definitions/service"},
+          "items": {"$ref": "#service/definitions/service"},
           "uniqueItems": true,
           "title": "Services"
         },

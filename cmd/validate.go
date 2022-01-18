@@ -118,12 +118,13 @@ func Validate() (bool, error) {
 
 	// create a reusable schema object (to validate multiple documents)
 	schema, err := gojsonschema.NewSchema(schemaLoader)
-	ProjectLogger.Info(fmt.Sprintf("Schema [%s] loaded.", schemaURL))
 
 	if err != nil {
 		ProjectLogger.Error(err)
 		return INVALID, err
 	}
+
+	ProjectLogger.Info(fmt.Sprintf("Schema [%s] loaded.", schemaURL))
 
 	// Create a JSON load for the actual document
 	documentLoader := gojsonschema.NewReferenceLoader("file://" + utils.Flags.InputFile)
@@ -143,6 +144,8 @@ func Validate() (bool, error) {
 		ProjectLogger.Error(fmt.Sprintf("Errors detected (%d):", lenErrs))
 		for _, resultError := range errs {
 
+			temp, _ := log.FormatStruct("resultError", resultError)
+			ProjectLogger.Trace(temp)
 			ProjectLogger.Error(resultError)
 		}
 	}

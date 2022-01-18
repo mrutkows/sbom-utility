@@ -198,7 +198,10 @@ func (log MiniLogger) dumpInterface(lvl Level, tag string, value interface{}, sk
 				// create a (left) slice of the timestamp omitting the " +0000 UTC" portion
 				//ts = fmt.Sprintf("[%s] ", tmp[:strings.Index(tmp, "+")-1])
 				sb.WriteString(fmt.Sprintf("[%s] ", tmp[:strings.Index(tmp, "+")-1]))
+			}
 
+			// Append UTC timestamp if TRACE (or DEBUG) enabled
+			if lvl == TRACE || lvl == DEBUG || lvl == ERROR {
 				// Append basic filename, line number, function name
 				basicFile := fn[strings.LastIndex(fn, "/")+1:]
 				sb.WriteString(fmt.Sprintf("%s(%d) ", basicFile, line))

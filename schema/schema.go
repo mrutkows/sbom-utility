@@ -156,15 +156,21 @@ func (sbom *Sbom) FindFormatAndSchema() error {
 			// Copy format info into Sbom context
 			// TODO: Support `strict` (default: false) flag matching
 			sbom.FormatInfo = format
-			sbom.findSchema(format, versionValue)
+			errFindSchema := sbom.findSchema(format, versionValue)
+
+			if errFindSchema != nil {
+				ProjectLogger.Error(errFindSchema.Error())
+				return errFindSchema
+			}
 			return nil
 		}
 	}
 
-	errFormat := errors.New("schema: unknown format")
-	ProjectLogger.Error(errFormat.Error())
+	// Did not find the format in our list
+	errFindFormat := errors.New("schema: unknown format")
+	ProjectLogger.Error(errFindFormat.Error())
 	ProjectLogger.Exit()
-	return errFormat
+	return errFindFormat
 }
 
 func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
