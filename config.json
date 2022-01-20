@@ -31,6 +31,22 @@
             "propertyValueFormat": "CycloneDX",
             "schemas": [
                   {
+                        "version": "1.2",
+                        "file": "file://schema/cyclonedx/1.2/bom-1.2.schema.json",
+                        "url": "https://raw.githubusercontent.com/CycloneDX/specification/master/schema/bom-1.2.schema.json",
+                        "strict": false,
+                        "latest": false,
+                        "variant": ""
+                  },
+                  {
+                        "version": "1.2",
+                        "file": "file://schema/cyclonedx/1.2/bom-1.2-strict.schema.json",
+                        "url": "https://raw.githubusercontent.com/CycloneDX/specification/master/schema/bom-1.2-strict.schema.json",
+                        "strict": true,
+                        "latest": false,
+                        "variant": "strict"
+                  },
+                  {
                         "version": "1.3",
                         "file": "file://schema/cyclonedx/1.3/bom-1.3.schema.json",
                         "url": "https://raw.githubusercontent.com/CycloneDX/specification/master/schema/bom-1.3.schema.json",
@@ -45,6 +61,14 @@
                         "strict": true,
                         "latest": true,
                         "variant": "strict"
+                  },
+                  {
+                        "version": "1.4",
+                        "file": "file://schema/cyclonedx/1.4/bom-1.4.schema.json",
+                        "url": "https://raw.githubusercontent.com/CycloneDX/specification/master/schema/bom-1.4.schema.json",
+                        "strict": false,
+                        "latest": true,
+                        "variant": ""
                   },
                   {
                         "version": "1.3",

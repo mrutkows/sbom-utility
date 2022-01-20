@@ -66,6 +66,7 @@ func validateCmdImpl(cmd *cobra.Command, args []string) error {
 		ProjectLogger.Info(message)
 	} else {
 		ProjectLogger.Error(message)
+		os.Exit(1)
 	}
 
 	ProjectLogger.Exit(isValid)
@@ -132,12 +133,14 @@ func Validate() (bool, error) {
 	result, errValidate := schema.Validate(documentLoader)
 	ProjectLogger.Info(fmt.Sprintf("result.Valid(): `%t`.", result.Valid()))
 
+	// Catch general errors from the validation module itself
+	// Note: actual validation errors are in the `result` object
 	if errValidate != nil {
 		ProjectLogger.Error(errValidate)
 		return INVALID, errValidate
 	}
 
-	// Log each schema error
+	// Log each validation result errors (i.e., actual validation errors found in the document)
 	errs := result.Errors()
 	lenErrs := len(errs)
 	if lenErrs > 0 {
