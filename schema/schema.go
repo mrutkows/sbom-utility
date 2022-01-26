@@ -132,6 +132,8 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 	sbom.jsonMap = make(map[string]interface{})
 	errUnmarshal := json.Unmarshal(sbom.rawBytes, &(sbom.jsonMap))
 	if errUnmarshal != nil {
+		// TODO: make an "ExitError() method in log package"
+		ProjectLogger.Exit()
 		ProjectLogger.Error(errUnmarshal)
 	}
 
@@ -160,8 +162,10 @@ func (sbom *Sbom) FindFormatAndSchema() error {
 
 			if errFindSchema != nil {
 				ProjectLogger.Error(errFindSchema.Error())
+				ProjectLogger.Exit()
 				return errFindSchema
 			}
+			ProjectLogger.Exit()
 			return nil
 		}
 	}
@@ -181,14 +185,15 @@ func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 
 		// Compare requested version to current schema version
 		//curSchemaVersion, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
-		ProjectLogger.Trace(fmt.Sprintf("Comparing sbom.Version: %s to schema.version: %s ...", version, schema.Version))
+		ProjectLogger.Trace(fmt.Sprintf("Comparing sbom.Version: `%s` to schema.version: `%s` ...", version, schema.Version))
 		if version == schema.Version {
 			// Copy schema info into Sbom context
 			if utils.Flags.Variant == schema.Variant {
 				sbom.SchemaInfo = schema
+				ProjectLogger.Exit()
 				return nil
 			} else {
-				ProjectLogger.Trace(fmt.Sprintf("Schema.Variant: %s did not match requested Variant: %s", schema.Variant, utils.Flags.Variant))
+				ProjectLogger.Trace(fmt.Sprintf("Schema.Variant: `%s` did not match requested Variant: `%s`", schema.Variant, utils.Flags.Variant))
 			}
 		}
 	}

@@ -25,6 +25,15 @@
         },
         {
             "showGlobalVariables": true,
+            "name": "CDX: EXAMPLE: juice-shop/bom.json (infer 1.2)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["validate", "-i", "examples/cyclonedx/juice-shop/bom.json","-t"]
+        },
+        {
+            "showGlobalVariables": true,
             "name": "SPDX: TEST: spdx-min-required.json (infer 2.2)",
             "type": "go",
             "request": "launch",

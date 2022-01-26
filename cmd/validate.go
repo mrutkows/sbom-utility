@@ -87,7 +87,7 @@ func Validate() (bool, error) {
 
 	document := schema.NewSbom(utils.Flags.InputFile)
 
-	ProjectLogger.Info(fmt.Sprintf("Validating file [%s]...", utils.Flags.InputFile))
+	ProjectLogger.Info(fmt.Sprintf("Validating file `%s`...", utils.Flags.InputFile))
 
 	// Load the raw, candidate SBOM (file) as JSON data
 	document.UnmarshalSBOM() // i.e., utils.Flags.InputFile
@@ -115,7 +115,7 @@ func Validate() (bool, error) {
 	// TODO: support remote schema load
 	// TODO: support "latest" schema load (flag) for version (i.e., override version declared in document)
 	var schemaURL = document.SchemaInfo.File
-	ProjectLogger.Info(fmt.Sprintf("Loading schema [%s]...", schemaURL))
+	ProjectLogger.Info(fmt.Sprintf("Loading schema `%s`...", schemaURL))
 	schemaLoader := gojsonschema.NewReferenceLoader(schemaURL)
 
 	// create a reusable schema object (to validate multiple documents)
@@ -126,7 +126,7 @@ func Validate() (bool, error) {
 		return INVALID, err
 	}
 
-	ProjectLogger.Info(fmt.Sprintf("Schema [%s] loaded.", schemaURL))
+	ProjectLogger.Info(fmt.Sprintf("Schema `%s` loaded.", schemaURL))
 
 	// Create a JSON load for the actual document
 	documentLoader := gojsonschema.NewReferenceLoader("file://" + utils.Flags.InputFile)
@@ -147,7 +147,7 @@ func Validate() (bool, error) {
 	if lenErrs > 0 {
 		ProjectLogger.Error(fmt.Sprintf("(%d) Schema errors detected:", lenErrs))
 		for i, resultError := range errs {
-			ProjectLogger.Error(fmt.Sprintf(">> %d. [%s] [%s]: %s",
+			ProjectLogger.Error(fmt.Sprintf(">> %d. [%s] [%s]: \"%s\"",
 				i+1,
 				resultError.Type(),
 				resultError.Field(),
