@@ -180,13 +180,16 @@ func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 	for _, schema := range format.Schemas {
 
 		// Compare requested version to current schema version
-		curSchemaVersion, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
-
-		if version == curSchemaVersion {
-			// TODO: Support `strict` (default: false) flag matching
+		//curSchemaVersion, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
+		ProjectLogger.Trace(fmt.Sprintf("Comparing sbom.Version: %s to schema.version: %s ...", version, schema.Version))
+		if version == schema.Version {
 			// Copy schema info into Sbom context
-			sbom.SchemaInfo = schema
-			return nil
+			if utils.Flags.Variant == schema.Variant {
+				sbom.SchemaInfo = schema
+				return nil
+			} else {
+				ProjectLogger.Trace(fmt.Sprintf("Schema.Variant: %s did not match requested Variant: %s", schema.Variant, utils.Flags.Variant))
+			}
 		}
 	}
 

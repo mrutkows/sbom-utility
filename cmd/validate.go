@@ -45,9 +45,11 @@ var validateCmd = &cobra.Command{
 func init() {
 	ProjectLogger.Enter()
 	// Add local flags to validate command
-	validateCmd.Flags().BoolVarP(&utils.Flags.Strict, "strict", "", false, "use `strict` schema when available")
-	// TODO: schema file (override) to use fora validation (instead of inferred schema)
+	//validateCmd.Flags().BoolVarP(&utils.Flags.Strict, "strict", "", false, "use `strict` schema when available")
+	// Force a schema file to use for validation (override inferred schema)
 	validateCmd.Flags().StringVarP(&utils.Flags.ForcedJsonSchemaFile, "force", "", "", "Explicit JSON schema file URL to force for validation; overrides inferred schema")
+	// Optional schema "variant" of inferred schema (e.g, "Strict")
+	validateCmd.Flags().StringVarP(&utils.Flags.Variant, "variant", "", "", "Select named schema variant (e.g., \"strict\"")
 	rootCmd.AddCommand(validateCmd)
 	ProjectLogger.Exit()
 }
@@ -76,7 +78,7 @@ func validateCmdImpl(cmd *cobra.Command, args []string) error {
 func Validate() (bool, error) {
 	ProjectLogger.Enter()
 	ProjectLogger.Trace(fmt.Sprintf("utils.Flags.InputFile: `%s`", utils.Flags.InputFile))
-	ProjectLogger.Trace(fmt.Sprintf("utils.Flags.Strict: `%t`", utils.Flags.Strict))
+	//ProjectLogger.Trace(fmt.Sprintf("utils.Flags.Strict: `%t`", utils.Flags.Strict))
 
 	// check for required fields on command
 	if utils.Flags.InputFile == "" {
@@ -112,7 +114,6 @@ func Validate() (bool, error) {
 
 	// TODO: support remote schema load
 	// TODO: support "latest" schema load (flag) for version (i.e., override version declared in document)
-	// TODO: support "force" schema (flag) to force validation against a specific version (i.e., override version declared in document)
 	var schemaURL = document.SchemaInfo.File
 	ProjectLogger.Info(fmt.Sprintf("Loading schema [%s]...", schemaURL))
 	schemaLoader := gojsonschema.NewReferenceLoader(schemaURL)
@@ -144,12 +145,13 @@ func Validate() (bool, error) {
 	errs := result.Errors()
 	lenErrs := len(errs)
 	if lenErrs > 0 {
-		ProjectLogger.Error(fmt.Sprintf("Errors detected (%d):", lenErrs))
-		for _, resultError := range errs {
-
-			temp, _ := log.FormatStruct("resultError", resultError)
-			ProjectLogger.Trace(temp)
-			ProjectLogger.Error(resultError)
+		ProjectLogger.Error(fmt.Sprintf("(%d) Schema errors detected:", lenErrs))
+		for i, resultError := range errs {
+			ProjectLogger.Error(fmt.Sprintf(">> %d. [%s] [%s]: %s",
+				i+1,
+				resultError.Type(),
+				resultError.Field(),
+				resultError.Description()))
 		}
 	}
 
