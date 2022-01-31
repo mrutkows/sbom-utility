@@ -31,6 +31,9 @@ import (
 const (
 	VALID   = true
 	INVALID = false
+
+	ERROR_APPLICATION = 2
+	ERROR_VALIDATION  = 1
 )
 
 var validateCmd = &cobra.Command{
@@ -60,7 +63,7 @@ func validateCmdImpl(cmd *cobra.Command, args []string) error {
 
 	if err != nil {
 		ProjectLogger.Error(err)
-		os.Exit(2)
+		os.Exit(ERROR_APPLICATION)
 	}
 
 	message := fmt.Sprintf("document `%s`: valid=[%t]", utils.Flags.InputFile, isValid)
@@ -68,7 +71,7 @@ func validateCmdImpl(cmd *cobra.Command, args []string) error {
 		ProjectLogger.Info(message)
 	} else {
 		ProjectLogger.Error(message)
-		os.Exit(1)
+		os.Exit(ERROR_VALIDATION)
 	}
 
 	ProjectLogger.Exit(isValid)
@@ -78,7 +81,6 @@ func validateCmdImpl(cmd *cobra.Command, args []string) error {
 func Validate() (bool, error) {
 	ProjectLogger.Enter()
 	ProjectLogger.Trace(fmt.Sprintf("utils.Flags.InputFile: `%s`", utils.Flags.InputFile))
-	//ProjectLogger.Trace(fmt.Sprintf("utils.Flags.Strict: `%t`", utils.Flags.Strict))
 
 	// check for required fields on command
 	if utils.Flags.InputFile == "" {
@@ -112,7 +114,7 @@ func Validate() (bool, error) {
 		}
 	}
 
-	// TODO: support remote schema load
+	// TODO: support remote schema load (via URL) with a flag (default should always be local file for security)
 	// TODO: support "latest" schema load (flag) for version (i.e., override version declared in document)
 	var schemaURL = document.SchemaInfo.File
 	ProjectLogger.Info(fmt.Sprintf("Loading schema `%s`...", schemaURL))

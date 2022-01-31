@@ -123,9 +123,12 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 	defer jsonFile.Close()
 
 	// read our opened jsonFile as a byte array.
-	// TODO: check for error
-	sbom.rawBytes, _ = ioutil.ReadAll(jsonFile)
-	ProjectLogger.Trace(fmt.Sprintf("&rawBytes=[%p]", &(sbom.rawBytes)))
+	var errReadAll error
+	sbom.rawBytes, errReadAll = ioutil.ReadAll(jsonFile)
+	if errReadAll != nil {
+		ProjectLogger.Error(errReadAll)
+		ProjectLogger.Exit()
+	}
 	ProjectLogger.Trace(fmt.Sprintf("rawBytes[:100]=[%s]", sbom.rawBytes[:100]))
 
 	// Attempt to unmarshal the prospective JSON document to a map
@@ -138,7 +141,7 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 	}
 
 	// Print the data type of result variable
-	ProjectLogger.Info(fmt.Sprintf("sbom.jsonMap(%s)", reflect.TypeOf(sbom.jsonMap)))
+	ProjectLogger.Trace(fmt.Sprintf("sbom.jsonMap(%s)", reflect.TypeOf(sbom.jsonMap)))
 	ProjectLogger.Exit()
 	return nil
 }
@@ -156,7 +159,6 @@ func (sbom *Sbom) FindFormatAndSchema() error {
 			versionValue, _ := sbom.GetKeyValueAsString(format.PropertyKeyVersion)
 
 			// Copy format info into Sbom context
-			// TODO: Support `strict` (default: false) flag matching
 			sbom.FormatInfo = format
 			errFindSchema := sbom.findSchema(format, versionValue)
 
