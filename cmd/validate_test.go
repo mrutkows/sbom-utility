@@ -18,8 +18,7 @@
 package cmd
 
 import (
-	//"regexp"
-
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -35,9 +34,9 @@ const (
 )
 
 func init() {
-	// TODO: use LDFLAGS to turn on "TRACE" (and require creation of a Logger)
-	// ONLY if needed to debug init() methods in the "cmd" package
-	ProjectLogger = log.NewLogger(log.INFO)
+
+	// The packages we call need to have their loggers created
+	ProjectLogger = log.NewLogger(log.ERROR)
 	schema.ProjectLogger = ProjectLogger
 
 	// Need to change the working directory to the application root instead of
@@ -49,6 +48,7 @@ func init() {
 
 	// Need workingDir to prepend to relative test files
 	utils.Flags.WorkingDir, _ = os.Getwd()
+	fmt.Printf("utils.Flags.WorkingDir: `%s`\n", utils.Flags.WorkingDir)
 
 	// Load application configuration files
 	// i.e., Format/Schemas in this case
@@ -60,6 +60,22 @@ func init() {
 }
 func TestMinRequiredCycloneDX13(t *testing.T) {
 	sbomFilename := "test/cyclonedx/cdx-1-3-min-required.json"
+	utils.Flags.InputFile = sbomFilename
+
+	isValid, errValidate := Validate()
+
+	if errValidate != nil {
+		t.Errorf(`%s: error (%t) %v `, sbomFilename, isValid, errValidate)
+	}
+
+	if !isValid {
+		t.Errorf(`%s: invalid (%t) %v `, sbomFilename, isValid, errValidate)
+	}
+
+}
+
+func TestExampleCycloneDX13JuiceShop(t *testing.T) {
+	sbomFilename := "examples/cyclonedx/juice-shop/bom.json"
 	utils.Flags.InputFile = sbomFilename
 
 	isValid, errValidate := Validate()
