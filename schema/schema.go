@@ -85,7 +85,7 @@ func (sbom *Sbom) GetKeyValueAsString(key string) (string, error) {
 	value := sbom.jsonMap[key]
 
 	if value == nil {
-		ProjectLogger.Warning(fmt.Sprintf("key: `%s` not found in document map", key))
+		ProjectLogger.Trace(fmt.Sprintf("key: `%s` not found in document map", key))
 		return "", nil
 	}
 
@@ -189,6 +189,7 @@ func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 		if version == schema.Version {
 			// Copy schema info into Sbom context
 			if utils.Flags.Variant == schema.Variant {
+				ProjectLogger.Trace(fmt.Sprintf("Schema.Variant: matched: `%s`", schema.Variant))
 				sbom.SchemaInfo = schema
 				ProjectLogger.Exit()
 				return nil

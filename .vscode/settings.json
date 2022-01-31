@@ -1,11 +1,15 @@
 {
       "cSpell.words": [
+            "backport",
+            "Classpath",
             "CYCLONEDX",
             "gojsonschema",
             "LDFLAGS",
             "parms",
+            "repackager",
             "SBOM",
             "SPDXID",
+            "swid",
             "unmarshalling"
       ]
 }
