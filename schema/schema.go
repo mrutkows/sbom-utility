@@ -133,8 +133,8 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 	errUnmarshal := json.Unmarshal(sbom.rawBytes, &(sbom.jsonMap))
 	if errUnmarshal != nil {
 		// TODO: make an "ExitError() method in log package"
-		ProjectLogger.Exit()
 		ProjectLogger.Error(errUnmarshal)
+		ProjectLogger.Exit()
 	}
 
 	// Print the data type of result variable

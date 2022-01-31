@@ -102,6 +102,9 @@
     "metadata": {
       "type": "object",
       "title": "BOM Metadata Object",
+      "required": [
+        "timestamp"
+      ],
       "properties": {
         "timestamp": {
           "type": "string",
