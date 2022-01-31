@@ -71,7 +71,7 @@ func NewSbom(inputfile string) *Sbom {
 	temp := Sbom{
 		filename: inputfile,
 	}
-	// NOTE: the Map is allocated (i.e., using `make`) as part of `UnmarhsalSBOM` method
+	// NOTE: the Map is allocated (i.e., using `make`) as part of `UnmarshalSBOM` method
 	return &temp
 }
 

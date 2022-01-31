@@ -40,6 +40,10 @@ const (
 	FLAG_FILENAME_OUTPUT_SHORT = "o"
 )
 
+const (
+	DEFAULT_CONFIG = "config.json"
+)
+
 var rootCmd = &cobra.Command{
 	Use:           fmt.Sprintf("%s [command] [flags]", utils.Flags.Project),
 	SilenceErrors: false, // TODO: investigate if we should use
@@ -102,7 +106,7 @@ func initConfig() {
 
 	// Load application configuration files
 	// i.e., Format/Schemas in this case
-	errCfg := schema.LoadFormatBasedSchemas("config.json")
+	errCfg := schema.LoadFormatBasedSchemas(DEFAULT_CONFIG)
 	if errCfg != nil {
 		ProjectLogger.Error(errCfg.Error())
 	}
