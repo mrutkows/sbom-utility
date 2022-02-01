@@ -78,7 +78,7 @@ func init() {
 // TODO: support "--force" of schema file
 func innerValidate(t *testing.T, filename string) {
 
-	// Copy the filename to the command line flags were the code looks for it
+	// Copy the test filename to the command line flags were the code looks for it
 	utils.Flags.InputFile = filename
 
 	// Invoke the actual validate function
@@ -95,7 +95,7 @@ func innerValidate(t *testing.T, filename string) {
 	}
 
 }
-func TestCDX13MinRequired(t *testing.T) {
+func TestCDX13MinRequiredBasic(t *testing.T) {
 	innerValidate(t, TEST_CDX_1_3_MIN_REQUIRED)
 }
 

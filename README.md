@@ -31,8 +31,14 @@ os.Chdir(wd[:last])
 
 Example: running test on the `cmd` package:
 
-```go
+```sh
 go test github.com/mrutkows/sbom-utility/cmd -v
+```
+
+run an individual test within the `cmd` package:
+
+```sh
+go test github.com/mrutkows/sbom-utility/cmd -v -run TestCDX13MinRequiredVariantIBM
 ```
 
 ## Tooling
