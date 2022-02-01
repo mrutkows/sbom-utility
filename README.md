@@ -54,7 +54,7 @@ In order to see global variables while debugging a specific configuration, you c
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "main.go", // "program": "${file}",
+            "program": "main.go",
             "args": ["validate", "-i", "test/cyclonedx/cdx-1-3-min-required.json","-t"]
         },
 ```
