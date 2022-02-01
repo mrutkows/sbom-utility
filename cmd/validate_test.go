@@ -31,14 +31,22 @@ import (
 // Consolidate test file name declarations
 const (
 	// Granular tests
-	TEST_CDX_1_3_MIN_REQUIRED         = "test/cyclonedx/cdx-1-3-min-required.json"
-	TEST_CDX_1_3_MIN_REQUIRED_VAR_IBM = "test/cyclonedx/cdx-1-3-ibm-min-required.json"
+	TEST_CDX_1_3_MIN_REQUIRED     = "test/cyclonedx/cdx-1-3-min-required.json"
+	TEST_CDX_1_3_IBM_MIN_REQUIRED = "test/cyclonedx/cdx-1-3-ibm-min-required.json"
 
 	// Application examples
 	TEST_CDX_1_2_NPM_JUICE_SHOP = "examples/cyclonedx/juice-shop/bom.json"
+
+	TEST_SPDX_2_2_EXAMPLE_1     = "examples/spdx/example1/example1.json"
+	TEST_SPDX_2_2_EXAMPLE_2_BIN = "examples/spdx/example2/example2-bin.json"
+	TEST_SPDX_2_2_EXAMPLE_2_SRC = "examples/spdx/example2/example2-src.json"
+	TEST_SPDX_2_2_EXAMPLE_5_BIN = "examples/spdx/example5/example5-bin.json"
+	TEST_SPDX_2_2_EXAMPLE_5_SRC = "examples/spdx/example5/example5-src.json"
+	TEST_SPDX_2_2_EXAMPLE_6_LIB = "examples/spdx/example6/example6-lib.json"
+	TEST_SPDX_2_2_EXAMPLE_6_SRC = "examples/spdx/example6/example6-src.json"
 )
 
-// TODO: look into passing args. to test cases
+// TODO: look into passing args. to test cases to enable trace and schema version overrides
 // See: https://stackoverflow.com/questions/47045445/idiomatic-way-to-pass-variables-to-test-cases-in-golang/51102972
 //
 // var password string
@@ -95,14 +103,48 @@ func innerValidate(t *testing.T, filename string) {
 	}
 
 }
-func TestCDX13MinRequiredBasic(t *testing.T) {
+func TestCdx13MinRequiredBasic(t *testing.T) {
 	innerValidate(t, TEST_CDX_1_3_MIN_REQUIRED)
 }
 
-func TestCDX13MinRequiredVariantIBM(t *testing.T) {
-	innerValidate(t, TEST_CDX_1_3_MIN_REQUIRED_VAR_IBM)
+func TestCdx13IbmMinRequiredBasic(t *testing.T) {
+	innerValidate(t, TEST_CDX_1_3_MIN_REQUIRED)
 }
 
-func TestCDX12ExampleJuiceShop(t *testing.T) {
+func TestCdx13MinRequiredVariantIBM(t *testing.T) {
+	innerValidate(t, TEST_CDX_1_3_IBM_MIN_REQUIRED)
+}
+
+func TestCdx12ExampleJuiceShop(t *testing.T) {
 	innerValidate(t, TEST_CDX_1_2_NPM_JUICE_SHOP)
+}
+
+// SPDX Examples
+
+func TestSpdx22Example1(t *testing.T) {
+	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_2_BIN)
+}
+
+func TestSPDX22Example2Bin(t *testing.T) {
+	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_2_BIN)
+}
+
+func TestSPDX22Example2Src(t *testing.T) {
+	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_2_SRC)
+}
+
+func TestSPDX22Example5Bin(t *testing.T) {
+	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_5_BIN)
+}
+
+func TestSPDX22Example5Src(t *testing.T) {
+	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_5_SRC)
+}
+
+func TestSPDX22Example6Lib(t *testing.T) {
+	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_6_LIB)
+}
+
+func TestSPDX22Example6Src(t *testing.T) {
+	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_6_SRC)
 }
