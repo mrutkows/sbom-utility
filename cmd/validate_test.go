@@ -38,7 +38,10 @@ const (
 	// Granular tests (invalid)
 
 	// Application examples
-	TEST_CDX_1_2_NPM_JUICE_SHOP = "examples/cyclonedx/juice-shop/bom.json"
+	TEST_CDX_1_2_NPM_JUICE_SHOP        = "examples/cyclonedx/juice-shop/bom.json"
+	TEST_CDX_1_3_PACKAGE_NPM_ASYNC_CRA = "test/cyclonedx/package/npm/async/cra-discovery.json"
+	TEST_CDX_1_3_PACKAGE_NPM_ASYNC_NST = "test/cyclonedx/package/npm/async/nst-sbom.json"
+	TEST_SPDX_2_2_PACKAGE_NPM_ASYNC_WS = "test/cyclonedx/package/npm/async/whitesource.json"
 
 	TEST_SPDX_2_2_EXAMPLE_1     = "examples/spdx/example1/example1.json"
 	TEST_SPDX_2_2_EXAMPLE_2_BIN = "examples/spdx/example2/example2-bin.json"
@@ -124,6 +127,18 @@ func TestSpdx22MinRequiredBasic(t *testing.T) {
 // CycloneDX Examples
 func TestCdx12ExampleJuiceShop(t *testing.T) {
 	innerValidate(t, TEST_CDX_1_2_NPM_JUICE_SHOP)
+}
+
+func TestCdx13PackageNpmAsyncCra(t *testing.T) {
+	innerValidate(t, TEST_CDX_1_3_PACKAGE_NPM_ASYNC_CRA)
+}
+
+func TestCdx13PackageNpmAsyncNst(t *testing.T) {
+	innerValidate(t, TEST_CDX_1_3_PACKAGE_NPM_ASYNC_NST)
+}
+
+func TestSpdx22PackageNpmAsyncWs(t *testing.T) {
+	innerValidate(t, TEST_SPDX_2_2_PACKAGE_NPM_ASYNC_WS)
 }
 
 // SPDX Examples
