@@ -30,9 +30,12 @@ import (
 
 // Consolidate test file name declarations
 const (
-	// Granular tests
+	// Granular tests (valid)
 	TEST_CDX_1_3_MIN_REQUIRED     = "test/cyclonedx/cdx-1-3-min-required.json"
 	TEST_CDX_1_3_IBM_MIN_REQUIRED = "test/cyclonedx/cdx-1-3-ibm-min-required.json"
+	TEST_SPDX_2_2_MIN_REQUIRED    = "test/spdx/spdx-min-required.json"
+
+	// Granular tests (invalid)
 
 	// Application examples
 	TEST_CDX_1_2_NPM_JUICE_SHOP = "examples/cyclonedx/juice-shop/bom.json"
@@ -103,24 +106,27 @@ func innerValidate(t *testing.T, filename string) {
 	}
 
 }
+
+// CycloneDX Tests
 func TestCdx13MinRequiredBasic(t *testing.T) {
 	innerValidate(t, TEST_CDX_1_3_MIN_REQUIRED)
 }
 
 func TestCdx13IbmMinRequiredBasic(t *testing.T) {
-	innerValidate(t, TEST_CDX_1_3_MIN_REQUIRED)
-}
-
-func TestCdx13MinRequiredVariantIBM(t *testing.T) {
 	innerValidate(t, TEST_CDX_1_3_IBM_MIN_REQUIRED)
 }
 
+// SPDX Tests
+func TestSpdx22MinRequiredBasic(t *testing.T) {
+	innerValidate(t, TEST_SPDX_2_2_MIN_REQUIRED)
+}
+
+// CycloneDX Examples
 func TestCdx12ExampleJuiceShop(t *testing.T) {
 	innerValidate(t, TEST_CDX_1_2_NPM_JUICE_SHOP)
 }
 
 // SPDX Examples
-
 func TestSpdx22Example1(t *testing.T) {
 	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_2_BIN)
 }
