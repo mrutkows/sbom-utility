@@ -8,7 +8,7 @@ Next, we want to parse SPDX 2.2 using a dedicated schema parser with the goal of
 
 - https://github.com/spdx
 - https://tools.spdx.org/app/convert/ - Used this to convert from tv format to json
-    - NOTE: tool could not convert `example6-bin.spdx`; resulted in an error
+  - NOTE: tool could not convert `example6-bin.spdx`; resulted in an error
 
 ---
 

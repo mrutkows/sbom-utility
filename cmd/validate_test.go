@@ -28,10 +28,26 @@ import (
 	"github.com/mrutkows/sbom-utility/utils"
 )
 
+// Consolidate test file name declarations
 const (
-	FORMAT_VALUE_CYCLONEDX = "CycloneDX"
-	FORMAT_VALUE_SPDX      = "SPDXRef-DOCUMENT"
+	// Granular tests
+	TEST_CDX_1_3_MIN_REQUIRED         = "test/cyclonedx/cdx-1-3-min-required.json"
+	TEST_CDX_1_3_MIN_REQUIRED_VAR_IBM = "test/cyclonedx/cdx-1-3-ibm-min-required.json"
+
+	// Application examples
+	TEST_CDX_1_2_NPM_JUICE_SHOP = "examples/cyclonedx/juice-shop/bom.json"
 )
+
+// TODO: look into passing args. to test cases
+// See: https://stackoverflow.com/questions/47045445/idiomatic-way-to-pass-variables-to-test-cases-in-golang/51102972
+//
+// var password string
+//
+// func init() {
+//	flag.StringVar(&password, "password", "", "Database Password")
+//}
+//
+// $ go test github.com/user/project -password=123345
 
 func init() {
 
@@ -58,34 +74,35 @@ func init() {
 	}
 
 }
-func TestMinRequiredCycloneDX13(t *testing.T) {
-	sbomFilename := "test/cyclonedx/cdx-1-3-min-required.json"
-	utils.Flags.InputFile = sbomFilename
 
+// TODO: support "--force" of schema file
+func innerValidate(t *testing.T, filename string) {
+
+	// Copy the filename to the command line flags were the code looks for it
+	utils.Flags.InputFile = filename
+
+	// Invoke the actual validate function
 	isValid, errValidate := Validate()
 
+	// Unexpected error
 	if errValidate != nil {
-		t.Errorf(`%s: error (%t) %v `, sbomFilename, isValid, errValidate)
+		t.Errorf(`%s: error (%t) %v `, filename, isValid, errValidate)
 	}
 
+	// SBOM is valid or not against declared schema
 	if !isValid {
-		t.Errorf(`%s: invalid (%t) %v `, sbomFilename, isValid, errValidate)
+		t.Errorf(`%s: invalid (%t) %v `, filename, isValid, errValidate)
 	}
 
 }
+func TestCDX13MinRequired(t *testing.T) {
+	innerValidate(t, TEST_CDX_1_3_MIN_REQUIRED)
+}
 
-func TestExampleCycloneDX13JuiceShop(t *testing.T) {
-	sbomFilename := "examples/cyclonedx/juice-shop/bom.json"
-	utils.Flags.InputFile = sbomFilename
+func TestCDX13MinRequiredVariantIBM(t *testing.T) {
+	innerValidate(t, TEST_CDX_1_3_MIN_REQUIRED_VAR_IBM)
+}
 
-	isValid, errValidate := Validate()
-
-	if errValidate != nil {
-		t.Errorf(`%s: error (%t) %v `, sbomFilename, isValid, errValidate)
-	}
-
-	if !isValid {
-		t.Errorf(`%s: invalid (%t) %v `, sbomFilename, isValid, errValidate)
-	}
-
+func TestCDX12ExampleJuiceShop(t *testing.T) {
+	innerValidate(t, TEST_CDX_1_2_NPM_JUICE_SHOP)
 }
