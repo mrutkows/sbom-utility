@@ -1,5 +1,4 @@
 {
-    "Document": {
         "spdxVersion": "SPDX-2.2",
         "documentNamespace": "https://www.ibm.com/supplychain/DocumentName-UUID",
         "creationInfo": {
@@ -31881,4 +31880,3 @@
             }
         ]
     }
-}

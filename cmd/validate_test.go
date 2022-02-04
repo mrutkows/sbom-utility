@@ -69,6 +69,12 @@ func init() {
 	ProjectLogger = log.NewLogger(log.ERROR)
 	schema.ProjectLogger = ProjectLogger
 
+	// Load command line args (flags)
+	//flag.BoolVar(&utils.Flags.Trace, "test.trace", false, "Enable trace output")
+	//flag.BoolVar(&utils.Flags.Debug, "debug", false, "Enable debug output")
+	// flag.Parse()
+	// fmt.Printf("os.Args[]=%v", os.Args)
+
 	// Need to change the working directory to the application root instead of
 	// the "cmd" directory where this "_test" file runs so that all test files
 	// as well as "config.json" and its referenced JSON schema files load properly.
@@ -129,18 +135,6 @@ func TestCdx12ExampleJuiceShop(t *testing.T) {
 	innerValidate(t, TEST_CDX_1_2_NPM_JUICE_SHOP)
 }
 
-func TestCdx13PackageNpmAsyncCra(t *testing.T) {
-	innerValidate(t, TEST_CDX_1_3_PACKAGE_NPM_ASYNC_CRA)
-}
-
-func TestCdx13PackageNpmAsyncNst(t *testing.T) {
-	innerValidate(t, TEST_CDX_1_3_PACKAGE_NPM_ASYNC_NST)
-}
-
-func TestSpdx22PackageNpmAsyncWs(t *testing.T) {
-	innerValidate(t, TEST_SPDX_2_2_PACKAGE_NPM_ASYNC_WS)
-}
-
 // SPDX Examples
 func TestSpdx22Example1(t *testing.T) {
 	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_2_BIN)
@@ -169,3 +163,18 @@ func TestSPDX22Example6Lib(t *testing.T) {
 func TestSPDX22Example6Src(t *testing.T) {
 	innerValidate(t, TEST_SPDX_2_2_EXAMPLE_6_SRC)
 }
+
+// Package: NPM: Async
+// -------------------
+
+// func TestCdx13PackageNpmAsyncCra(t *testing.T) {
+// 	innerValidate(t, TEST_CDX_1_3_PACKAGE_NPM_ASYNC_CRA)
+// }
+
+// func TestCdx13PackageNpmAsyncNst(t *testing.T) {
+// 	innerValidate(t, TEST_CDX_1_3_PACKAGE_NPM_ASYNC_NST)
+// }
+
+// func TestSpdx22PackageNpmAsyncWs(t *testing.T) {
+// 	innerValidate(t, TEST_SPDX_2_2_PACKAGE_NPM_ASYNC_WS)
+// }
