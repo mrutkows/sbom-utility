@@ -7,9 +7,15 @@
             "timestamp": "2020-08-03T03:20:53.771Z",
             "tools": [
                   {
-                  "vendor": "IBM",
-                  "name": "PTC Scanning Tool",
-                  "version": "2.0.0"
+                        "vendor": "IBM",
+                        "name": "PTC Scanning Tool",
+                        "version": "1.0.0-beta.1+0099",
+                        "hashes": [
+                              {
+                                    "alg": "SHA-1",
+                                    "content": "96b2709e57c9c4e09a6fd66a8fd979844f69f08a"
+                              }
+                        ]
                   }
             ],
             "component": {
@@ -45,6 +51,20 @@
                  {
 
                  }
+            ],
+            "manufacture": {
+
+            },
+            "supplier": {
+
+            },
+            "licenses": [
+                  {
+                        "license":
+                        {
+                              "id": "Apache-2.0"
+                        }
+                  }
             ]
       },
       "components": [
