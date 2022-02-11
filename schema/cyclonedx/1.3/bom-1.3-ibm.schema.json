@@ -103,7 +103,12 @@
       "type": "object",
       "title": "BOM Metadata Object",
       "required": [
-        "timestamp"
+        "timestamp",
+        "tools",
+        "component",
+        "manufacture",
+        "supplier",
+        "licenses"
       ],
       "properties": {
         "timestamp": {
@@ -123,7 +128,8 @@
           "type": "array",
           "title": "Authors",
           "description": "The person(s) who created the BOM. Authors are common in BOMs created through manual processes. BOMs created through automated means may not have authors.",
-          "items": {"$ref": "#/definitions/organizationalContact"}
+          "items": {"$ref": "#/definitions/organizationalContact"},
+          "minItems": 1
         },
         "component": {
           "title": "Component",
@@ -143,7 +149,8 @@
         "licenses": {
           "type": "array",
           "title": "BOM License(s)",
-          "items": {"$ref": "#/definitions/licenseChoice"}
+          "items": {"$ref": "#/definitions/licenseChoice"},
+          "minItems": 1
         },
         "properties": {
           "type": "array",
@@ -157,28 +164,46 @@
       "type": "object",
       "title": "Tool",
       "description": "The tool used to create the BOM.",
+      "required": [
+        "vendor",
+        "name",
+        "version",
+        "hashes"
+      ],
       "properties": {
         "vendor": {
           "type": "string",
           "title": "Tool Vendor",
-          "description": "The date and time (timestamp) when the document was created."
+          "description": "The date and time (timestamp) when the document was created.",
+          "pattern": "^([A-Za-z0-9][A-Za-z0-9 ]{1,126}[A-Za-z0-9])$",
+          "enum": [
+            "IBM",
+            "IBM Product Transformation Center"
+          ]
         },
         "name": {
           "type": "string",
           "title": "Tool Name",
-          "description": "The date and time (timestamp) when the document was created."
+          "description": "The date and time (timestamp) when the document was created.",
+          "pattern": "^([A-Za-z0-9][A-Za-z0-9 ]{1,126}[A-Za-z0-9])$",
+          "enum": [
+            "PTC Scanning Tool",
+            "Code Risk Analyzer (CRA)"
+          ]
         },
         "version": {
           "type": "string",
           "title": "Tool Version",
-          "description": "The date and time (timestamp) when the document was created."
+          "description": "The date and time (timestamp) when the document was created.",
+          "pattern": "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
         },
         "hashes": {
           "$id": "#/definitions/tool/properties/hashes",
           "type": "array",
           "items": {"$ref": "#/definitions/hash"},
           "title": "Hashes",
-          "description": "The hashes of the tool (if applicable)."
+          "description": "The hashes of the tool (if applicable).",
+          "minItems": 1
         }
       }
     },

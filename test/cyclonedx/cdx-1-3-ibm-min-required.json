@@ -40,7 +40,12 @@
                   "url": "git+https://github.com/bkimminich/juice-shop.git"
                   }
                   ]
-            }
+            },
+            "authors": [
+                 {
+
+                 }
+            ]
       },
       "components": [
             {

@@ -69,7 +69,7 @@ func init() {
 	ProjectLogger = log.NewLogger(log.ERROR)
 	schema.ProjectLogger = ProjectLogger
 
-	// Load command line args (flags)
+	// TODO: Load command line args (flags), primarily we want to turn "trace" output on
 	//flag.BoolVar(&utils.Flags.Trace, "test.trace", false, "Enable trace output")
 	//flag.BoolVar(&utils.Flags.Debug, "debug", false, "Enable debug output")
 	// flag.Parse()
