@@ -1,0 +1,5 @@
+# make target file types
+*.exe
+
+# IDEs
+*.code-workspace
