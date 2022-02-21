@@ -2,7 +2,7 @@
 
 Initially, we want to validate SPDX or CycloneDX SBOMs (JSON format only) to current standard schema.
 
-Specifically, we want to parse standardized SBOM output from tooling, validate it using the declared schema format (e.g., SPDX, CycloenDX) and version (e.g., "2.2", "1.3", etc.) with the goal of being able to losslessly convert it to the most current other formats to CycloneDX schema (normative) for comparison. Once this is accomplished we wish to support "merge" operations (with deduplication if possible) of multiple CycloneDX SBOMs produced from a plurarlity of tool sources.
+Specifically, we want to parse standardized SBOM output from tooling, validate it using the declared schema format (e.g., SPDX, CycloenDX) and version (e.g., "2.2", "1.3", etc.) with the goal of being able to losslessly convert it to the most current CycloneDX schema (normative) for comparison. Once this is accomplished we wish to support "merge" operations (with deduplication if possible) of multiple CycloneDX SBOMs produced from a plurarlity of tool sources.
 
 ---
 
@@ -12,15 +12,54 @@ Since the utility comes with a default configuration file and input schemas read
 clone the entirety of the repository at this time.   Over time, we hope to be able to create a release process for the binary with just the necessary supporting files, but at this time achieving the validation function is tactically important.
 
 ```bash
-
+git clone git@github.com:mrutkows/sbom-utility.git
 ```
 
-### Building
+### Development
+
+#### Prereqs
+
+- Go v1.16 or higher: see [https://go.dev/doc/install](https://go.dev/doc/install)
+- `git` client: see [https://git-scm.com/downloads](https://git-scm.com/downloads)
+
+#### Building
+
+To produce a local binary named `sbom-utility` with version set to `latest` in the project root directory:
+
+```bash
+$ cd sbom-utility/
+$ make build
+```
+
+to produce a release version you can set the following flags and invoke `go build` directly:
+```bash
+BINARY=sbom-utility
+VERSION=latest
+LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.Binary=${BINARY}"
+
+$	go build ${LDFLAGS} -o ${BINARY}
+```
+
+**TODO**: Update the `Makefile` to add a `release` target that conditionally pulls these env. variable values and only uses the hardcoded values as defaults when not found in the runtime environment.
 
 ### Running
 
+The utility supports the `help` command for the root command as well as any supported commands
+
+For example, to list top-level (root command) help which lists the supported "Available Commands":
+```bash
+$ ./sbom-utility help
+```
+
+An example help listing for the `validate` command:
+```bash
+$ ./sbom-utility validate help
+```
+```
+
 ### Supporting new SBOM formats and schema versions
 
+TODO
 
 ---
 
