@@ -36,8 +36,7 @@ to produce a release version you can set the following flags and invoke `go buil
 BINARY=sbom-utility
 VERSION=latest
 LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.Binary=${BINARY}"
-
-$	go build ${LDFLAGS} -o ${BINARY}
+$ go build ${LDFLAGS} -o ${BINARY}
 ```
 
 **TODO**: Update the `Makefile` to add a `release` target that conditionally pulls these env. variable values and only uses the hardcoded values as defaults when not found in the runtime environment.
