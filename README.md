@@ -2,7 +2,19 @@
 
 Initially, we want to validate SPDX or CycloneDX SBOMs (JSON format only) to current standard schema.
 
-Next, we want to parse SPDX 2.2 using a dedicated schema parser with the goal of being able to losslessly convert it to the most current CycloneDX schema.
+Specifically, we want to parse standardized SBOM output from tooling, validate it using the declared schema format (e.g., SPDX, CycloenDX) and version (e.g., "2.2", "1.3", etc.) with the goal of being able to losslessly convert it to the most current other formats to CycloneDX schema (normative) for comparison. Once this is accomplished we wish to support "merge" operations (with deduplication if possible) of multiple CycloneDX SBOMs produced from a plurarlity of tool sources.
+---
+
+### Installation
+
+### Building
+
+### Running
+
+### Supporting new SBOM formats and schema versions
+
+
+---
 
 ## References
 
