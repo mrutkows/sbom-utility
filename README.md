@@ -46,6 +46,7 @@ $ go build ${LDFLAGS} -o ${BINARY}
 The utility supports the `help` command for the root command as well as any supported commands
 
 For example, to list top-level (root command) help which lists the supported "Available Commands":
+
 ```bash
 $ ./sbom-utility help
 ```
@@ -53,7 +54,6 @@ $ ./sbom-utility help
 An example help listing for the `validate` command:
 ```bash
 $ ./sbom-utility validate help
-```
 ```
 
 ### Supporting new SBOM formats and schema versions
