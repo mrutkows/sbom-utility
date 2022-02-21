@@ -3,9 +3,17 @@
 Initially, we want to validate SPDX or CycloneDX SBOMs (JSON format only) to current standard schema.
 
 Specifically, we want to parse standardized SBOM output from tooling, validate it using the declared schema format (e.g., SPDX, CycloenDX) and version (e.g., "2.2", "1.3", etc.) with the goal of being able to losslessly convert it to the most current other formats to CycloneDX schema (normative) for comparison. Once this is accomplished we wish to support "merge" operations (with deduplication if possible) of multiple CycloneDX SBOMs produced from a plurarlity of tool sources.
+
 ---
 
 ### Installation
+
+Since the utility comes with a default configuration file and input schemas ready-mde for both SPDX and CycloneDX validation, the best way to install it is to
+clone the entirety of the repository at this time.   Over time, we hope to be able to create a release process for the binary with just the necessary supporting files, but at this time achieving the validation function is tactically important.
+
+```bash
+
+```
 
 ### Building
 
