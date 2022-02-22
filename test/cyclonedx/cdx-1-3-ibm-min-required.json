@@ -26,7 +26,12 @@
                   "description": "Probably the most modern and sophisticated insecure web application",
                   "properties": [
                         {
-
+                              "name": "urn:ibm:names:identifier:deliverable:",
+                              "value": "71C22290D7DB11EBAA175CFD3E629A2A"
+                        },
+                        {
+                              "name": "urn:ibm:names:identifier:product:",
+                              "value": "5737-I23"
                         }
                   ],
                   "licenses": [
@@ -106,7 +111,8 @@
               "description": "Node.js body parsing middleware",
               "properties": [
                     {
-
+                        "name": "TBD",
+                        "value": "TBD"
                     }
               ],
               "hashes": [
@@ -129,7 +135,45 @@
                   "url": "https://github.com/expressjs/body-parser#readme"
                 }
               ]
-            }
+            },
+            {
+                  "type": "application",
+                  "bom-ref": "pkg:TBD",
+                  "purl": "pkg:ibm/apiconnect@10.0.4.0 TBD",
+                  "name": "IBM API Connect 10.0.4.0",
+                  "version": "10.0.4.0",
+                  "description": "TBD",
+                  "properties": [
+                        {
+                              "name": "urn:ibm:names:ch:requirements:packaging:identifier:deliverable:",
+                              "value": "1DWYIAMM<LDFLHNQDN49129000"
+                        },
+                        {
+                              "name": "TBD",
+                              "value": "TBD"
+                        }
+                  ],
+                  "hashes": [
+                    {
+                      "alg": "SHA-1",
+                      "content": "1111aaaa2222cccc3333dddd4444eeee5555ffff"
+                    }
+                  ],
+                  "licenses": [
+                    {
+                        "license": {
+                        "id": "Apache 2"
+                      }
+                    }
+                  ],
+                  "externalReferences": [
+                    {
+                      "type": "TBD",
+                      "url": "TBD"
+                    }
+                  ]
+                }
+
       ],
       "externalReferences": [
             {
