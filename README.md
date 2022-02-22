@@ -77,7 +77,7 @@ The utility uses the [`config.json`](./config.json) file to lookup supported for
 
 The value for `propertyKeyFormat` should be the exact name of key field that would appear in the JSON SBOM itself which can be used to confirm it is indeed a format match.  In addition, the correspondig value to match for that key should be declared in the `propertyValueFormat` value.
 
-The fields `canonicalName`, `propertyKeyFormat`, `propertyKeyVersion`, and `propertyValueFormat` are requried. The formta object **MUST** have at least one valud `schema` object. The `schema` object appears as follows:
+The fields `canonicalName`, `propertyKeyFormat`, `propertyKeyVersion`, and `propertyValueFormat` are requried. The `format` object **MUST** have at least one valud `schema` object. The `schema` object appears as follows:
 
 ```json
 {
@@ -92,6 +92,7 @@ The fields `canonicalName`, `propertyKeyFormat`, `propertyKeyVersion`, and `prop
 
 - Add a copy of the JSON schema file locally in the project under the structure `<format>/<spec>/<version>/schemas/<schema filename>`.
 - Assure only one `schema` object entry has the value `latest` set to `true`.  This latest schema will be used when the SBOM being validated does not have a clear version declared <or> used with the `--force latest` flag (TODO).
+- If you have a customized or "variant" version of a schema (with the same format and version values) you wish to use for validation (e.g., an `ibm` version with added requirements or test an unrelased version), you can create an entry that has the same `vesion` as another entry, but also declare its `variant` name _(non-empty value)_.  This value can be supplied on the commend line with the `--variant <variant name>` flag to force the validator to use it instead of the default _(empty variant value)_.
 
 
 **TODO**
