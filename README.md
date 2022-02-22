@@ -85,7 +85,7 @@ $ ./sbom-utility validate -i examples/cyclonedx/juice-shop/bom.json
 alternatively, developers can run the "go" version:
 
 ```bash
-$ go run main.go validate -i examples/cyclonedx/juice-shop/bom.json
+$ go run main.go validate -i examples/cyclonedx/package/npm/async/
 ```
 
 - Developers can supp'y an additional `-t` (trace) or `-d` (debug) flags to get detailed information with callstack/function trace with timestamps and line numbers to stdout.
@@ -95,7 +95,7 @@ $ go run main.go validate -i examples/cyclonedx/juice-shop/bom.json
 The validation command will use the declared format and version found within the SBOM JSON file itself to lookup the default (latest) matching schema version (as declared in`config.json`; however, if variants of that same schema (same format and version) are declared, they can be requested via the `--variant` command line flag:
 
 ```bash
-$ ./sbom-utility validate -i examples/cyclonedx/juice-shop/bom.json --variant ibm
+$ ./sbom-utility validate -i test/cyclonedx/cdx-1-3-ibm-min-required.json --variant ibm
 ```
 
 ### Supporting new SBOM formats and schema versions
