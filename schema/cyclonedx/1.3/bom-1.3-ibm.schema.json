@@ -175,7 +175,7 @@
           "type": "string",
           "title": "Tool Vendor",
           "description": "The date and time (timestamp) when the document was created.",
-          "pattern": "^([A-Za-z0-9][A-Za-z0-9 ]{1,126}[A-Za-z0-9- ])$",
+          "pattern": "^([A-Za-z0-9][A-Za-z0-9-(). ]{1,126}[A-Za-z0-9.()])$",
           "enum": [
             "IBM",
             "IBM Product Transformation Center"
@@ -185,7 +185,7 @@
           "type": "string",
           "title": "Tool Name",
           "description": "The date and time (timestamp) when the document was created.",
-          "pattern": "^([A-Za-z0-9][A-Za-z0-9 ]{1,126}[A-Za-z0-9- ])$",
+          "pattern": "^([A-Za-z0-9][A-Za-z0-9-(). ]{1,126}[A-Za-z0-9.()])$",
           "enum": [
             "PTC Scanning Tool",
             "Code Risk Analyzer (CRA)"
@@ -224,7 +224,7 @@
           "examples": [
             "Example Inc."
           ],
-          "pattern": "^([A-Za-z0-9][A-Za-z0-9 ]{1,126}[A-Za-z0-9- ])$"
+          "pattern": "^([A-Za-z0-9][A-Za-z0-9-(). ]{1,126}[A-Za-z0-9.()])$"
         },
         "url": {
           "type": "array",
@@ -240,8 +240,7 @@
           "type": "array",
           "title": "Contact",
           "description": "A contact at the organization. Multiple contacts are allowed.",
-          "items": {"$ref": "#/definitions/organizationalContact"},
-          "minItems": 1
+          "items": {"$ref": "#/definitions/organizationalContact"}
         }
       }
     },

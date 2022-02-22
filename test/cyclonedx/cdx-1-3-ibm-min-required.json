@@ -53,9 +53,27 @@
                  }
             ],
             "manufacture": {
+                  "name": "Apache Software Foundation (ASF)",
+                  "url": [
+                        "https://www.apache.org"
+                  ],
+                  "contact": [
+                        {
+
+                        }
+                  ]
 
             },
             "supplier": {
+                  "name": "IBM",
+                  "url": [
+                        "https://www.ibm.com"
+                  ],
+                  "contact": [
+                        {
+
+                        }
+                  ]
 
             },
             "licenses": [
