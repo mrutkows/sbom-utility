@@ -2,9 +2,9 @@
 
 # sbom-utility
 
-Initially, we want to validate SPDX or CycloneDX SBOMs (JSON format only) to current standard schema.
+This utility is designed to be an API platform used initially to validate SPDX or CycloneDX SBOMs (JSON format only) against officially published and versioned JSON schemas for recognized SBOM formats.
 
-Specifically, we want to parse standardized SBOM output from tooling, validate it using the declared schema format (e.g., SPDX, CycloenDX) and version (e.g., "2.2", "1.3", etc.) with the goal of being able to losslessly convert it to the most current CycloneDX schema (normative) for comparison. Once this is accomplished we wish to support "merge" operations (with deduplication if possible) of multiple CycloneDX SBOMs produced from a plurarlity of tool sources.
+Specifically, we want to parse standardized SBOM output from tooling, validate it using the declared schema format (e.g., SPDX, CycloenDX) and version (e.g., "2.2", "1.3", etc.) with the goal of being able to losslessly convert it to the most current CycloneDX schema (normative) for comparison. Once this is accomplished we wish to support A "merge" command (with deduplication if possible) of multiple CycloneDX SBOMs produced from a plurarlity of tool sources.
 
 ### Index
 
