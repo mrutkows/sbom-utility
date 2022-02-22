@@ -162,13 +162,13 @@
                   "licenses": [
                     {
                         "license": {
-                        "id": "Apache 2"
+                        "id": "Apache-2.0"
                       }
                     }
                   ],
                   "externalReferences": [
                     {
-                      "type": "TBD",
+                      "type": "website",
                       "url": "TBD"
                     }
                   ]
