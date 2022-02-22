@@ -275,7 +275,8 @@
       "required": [
         "type",
         "name",
-        "version"
+        "version",
+        "properties"
       ],
       "properties": {
         "type": {
