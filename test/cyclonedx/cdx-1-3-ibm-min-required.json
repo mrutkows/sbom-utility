@@ -59,7 +59,12 @@
                   ],
                   "contact": [
                         {
-
+                              "name": "General",
+                              "email": "apache@apache.org."
+                        },
+                        {
+                              "name": "Security vulnerability email",
+                              "email": "security@apache.org"
                         }
                   ]
 
@@ -71,7 +76,9 @@
                   ],
                   "contact": [
                         {
-
+                              "name": "TBD",
+                              "email": "TBD",
+                              "phone": "TBD"
                         }
                   ]
 
