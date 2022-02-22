@@ -76,7 +76,7 @@ $ ./sbom-utility validate help
 
 #### Validation examples
 
-Validating the "juice shop" SBOM (CycloneDX 1.2) example provided in this repository using a `built` binary: 
+Validating the "juice shop" SBOM (CycloneDX 1.2) example provided in this repository using a "built" (i.e., `make build`) binary: 
 
 ```bash
 $ ./sbom-utility validate -i examples/cyclonedx/juice-shop/bom.json
