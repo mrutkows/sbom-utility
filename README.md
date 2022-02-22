@@ -90,6 +90,14 @@ $ go run main.go validate -i examples/cyclonedx/juice-shop/bom.json
 
 - Developers can supp'y an additional `-t` (trace) or `-d` (debug) flags to get detailed information with callstack/function trace with timestamps and line numbers to stdout.
 
+### Running schema variants
+
+The validation command will use the declared format and version found within the SBOM JSON file itself to lookup the default (latest) matching schema version (as declared in`config.json`; however, if variants of that same schema (same format and version) are declared, they can be requested via the `--variant` command line flag:
+
+```bash
+$ ./sbom-utility validate -i examples/cyclonedx/juice-shop/bom.json --variant ibm
+```
+
 ### Supporting new SBOM formats and schema versions
 
 The utility uses the [`config.json`](./config.json) file to lookup supported formats and their associated versioned schemas.  To add another SBOM format simply add another entry to the `format` array in the root of the document:
