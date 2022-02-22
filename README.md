@@ -10,7 +10,7 @@ Specifically, we want to parse standardized SBOM output from tooling, validate i
 
 - [Installation](#installation)
 - [Development](#development)
-    - [Prereqs] (#prereqs) 
+    - [Prereqs](#prereqs) 
     - [Building](#building)
     - [Running](#running)
     - [Supporting new SBOM formats and schema versions](#supporting-new-sbom-formats-and-schema-versions)
