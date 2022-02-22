@@ -199,6 +199,19 @@ _Please note that this setting was only recently disabled by default as a stop-g
             
 ## References
 
+### CycloneDX
+
+- [CycloneDX Specification Overview](https://cyclonedx.org/specification/overview/)
+- [CycloneDX Examples](https://github.com/CycloneDX/sbom-examples)
+
+#### CycloneDX use cases
+
+- [CycloneDX Use Cases](https://cyclonedx.org/use-cases/) (comprehensive)
+  - [Inventory](https://cyclonedx.org/use-cases/#inventory) (PoC)
+  - [License Compliance](https://cyclonedx.org/use-cases/#license-compliance) (PoC)
+  - [Known Vulnerabilities](https://cyclonedx.org/use-cases/#known-vulnerabilities) (PoC)
+    
+### SPDX 
 - https://github.com/spdx
 - https://tools.spdx.org/app/convert/ - Used this to convert from tv format to json
   - NOTE: tool could not convert `example6-bin.spdx`; resulted in an error
