@@ -16,7 +16,7 @@ Specifically, we want to parse standardized SBOM output from tooling, validate i
     - [Supporting new SBOM formats and schema versions](#supporting-new-sbom-formats-and-schema-versions)
 - [Testing](#testing)
     - [Authoring tests](#authoring-tests)
-    - [Running tests(#running-tests)
+    - [Running tests](#running-tests)
     - [Tooling](#tooling)
 - [References](#references)
 ---
