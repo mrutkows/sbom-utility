@@ -202,7 +202,9 @@ _Please note that this setting was only recently disabled by default as a stop-g
 ### CycloneDX
 
 - [CycloneDX Specification Overview](https://cyclonedx.org/specification/overview/)
-- [CycloneDX Examples](https://github.com/CycloneDX/sbom-examples)
+- Specification (all versions): https://github.com/CycloneDX/specification
+    - (JSON) Schemas: https://github.com/CycloneDX/specification/tree/master/schema
+    - Examples: https://github.com/CycloneDX/sbom-examples
 
 #### CycloneDX use cases
 
@@ -212,6 +214,12 @@ _Please note that this setting was only recently disabled by default as a stop-g
   - [Known Vulnerabilities](https://cyclonedx.org/use-cases/#known-vulnerabilities) (PoC)
     
 ### SPDX 
-- https://github.com/spdx
+- GitHub: https://github.com/spdx
+  - Specification: https://github.com/spdx/spdx-spec
+  - Schemas: https://github.com/spdx/spdx-spec/tree/development/v2.2.2/schemas
 - https://tools.spdx.org/app/convert/ - Used this to convert from tv format to json
   - NOTE: tool could not convert `example6-bin.spdx`; resulted in an error
+    
+### Software-Bill-of-Materils (SBOM)
+  - [Software Bill Of Materials: Formats, Use Cases, and Tools](https://fossa.com/blog/software-bill-of-materials-formats-use-cases-tools/)
+  - [NTIA - SBOM Minimum Requirements](https://www.ntia.doc.gov/blog/2021/ntia-releases-minimum-elements-software-bill-materials)
