@@ -139,7 +139,7 @@
             {
                   "type": "application",
                   "bom-ref": "pkg:TBD",
-                  "purl": "pkg:ibm/apiconnect@10.0.4.0 TBD",
+                  "purl": "pkg:ibm/www.ibm.com/fixcentral/apiconnect@10.0.4.0#TBD",
                   "name": "IBM API Connect 10.0.4.0",
                   "version": "10.0.4.0",
                   "description": "TBD",
@@ -169,7 +169,7 @@
                   "externalReferences": [
                     {
                       "type": "website",
-                      "url": "TBD"
+                      "url": "https://www.ibm.com/mysupport/s/topic/0TO50000000IMpYGAW/api-connect"
                     }
                   ]
                 }
