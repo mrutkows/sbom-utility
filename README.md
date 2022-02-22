@@ -90,7 +90,9 @@ The fields `canonicalName`, `propertyKeyFormat`, `propertyKeyVersion`, and `prop
 },
 ```
 
-Add a copy of the JSON schema file locally in the project under the structure `<format>/<spec>/<version>/schemas/<schema filename>.
+- Add a copy of the JSON schema file locally in the project under the structure `<format>/<spec>/<version>/schemas/<schema filename>`.
+- Assure only one `schema` object entry has the value `latest` set to `true`.  This latest schema will be used when the SBOM being validated does not have a clear version declared <or> used with the `--force latest` flag (TODO).
+
 
 **TODO**
 - Using remote (network hosted) schema files for valdiation via the `url` field is supported in the configuration file; however, code is needed to implement the load/read/parse.
