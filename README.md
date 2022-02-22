@@ -13,6 +13,7 @@ Specifically, we want to parse standardized SBOM output from tooling, validate i
     - [Prereqs](#prereqs) 
     - [Building](#building)
     - [Running](#running)
+    - [Examples](#examples)
     - [Supporting new SBOM formats and schema versions](#supporting-new-sbom-formats-and-schema-versions)
 - [Testing](#testing)
     - [Authoring tests](#authoring-tests)
@@ -70,6 +71,24 @@ An example help listing for the `validate` command:
 ```bash
 $ ./sbom-utility validate help
 ```
+
+### Examples
+
+#### Validation examples
+
+Validating the "juice shop" SBOM (CycloneDX 1.2) example provided in this repository using a `built` binary: 
+
+```bash
+$ ./sbom-utility validate -i examples/cyclonedx/juice-shop/bom.json
+```
+
+alternatively, developers can run the "go" version:
+
+```bash
+$ go run main.go validate -i examples/cyclonedx/juice-shop/bom.json
+```
+
+- Developers can supp'y an additional `-t` (trace) or `-d` (debug) flags to get detailed information with callstack/function trace with timestamps and line numbers to stdout.
 
 ### Supporting new SBOM formats and schema versions
 
