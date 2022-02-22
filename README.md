@@ -58,7 +58,40 @@ $ ./sbom-utility validate help
 
 ### Supporting new SBOM formats and schema versions
 
-TODO
+The utility uses the [`config.json`](./config.json) file to lookup supported formats and their associated versioned schemas.  To add another SBOM format simply add another entry to the `format` array in the root of the document:
+```json
+{
+            "canonicalName": "SPDX",
+            "propertyKeyFormat": "SPDXID",
+            "propertyKeyVersion": "spdxVersion",
+            "propertyValueFormat": "SPDXRef-DOCUMENT",
+            "schemas": [
+                {
+                   ...
+                }
+            ]
+   ....
+}
+```
+
+The value for `propertyKeyFormat` should be the exact name of key field that would appear in the JSON SBOM itself which can be used to confirm it is indeed a format match.  In addition, the correspondig value to match for that key should be declared in the `propertyValueFormat` value.
+
+The fields `canonicalName`, `propertyKeyFormat`, `propertyKeyVersion`, and `propertyValueFormat` are requried. The formta object **MUST** have at least one valud `schema` object. The `schema` object appears as follows:
+
+{
+     "version": "SPDX-2.2",
+     "file": "file://schema/spdx/2.2.1/spdx-schema.json",
+     "url": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.1/schemas/spdx-schema.json",
+     "strict": false,
+     "latest": true,
+     "variant": ""
+},
+```
+
+Add a copy of the JSON schema file locally in the project under the structure `<format>/<spec>/<version>/schemas/<schema filename>.
+
+**TODO**
+- Using remote (network hosted) schema files for valdiation via the `url` field is supported in the configuration file; however, code is needed to implement the load/read/parse.
 
 ---
 
