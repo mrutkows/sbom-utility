@@ -32,16 +32,23 @@ type MyFlags struct {
 	ExecDir    string
 
 	// persistent flags (common to all commands)
-	Trace        bool // trace logging
-	Debug        bool // debug logging
-	InputFile    string
-	InputFormat  string
-	OutputFile   string
-	OutputFormat string
+	Quiet            bool // suppresses all non-essential (informational) output from a command. Overrides any other log-level commands.
+	Trace            bool // trace logging
+	Debug            bool // debug logging
+	InputFile        string
+	OutputFile       string
+	OutputSbomFormat string // TODO: future format conversion
 
 	// Validate (local) flags
 	ForcedJsonSchemaFile string
 	Variant              string
+
+	// Schema
+	list bool
+
+	// Query / List commands flags
+	OutputFormat string // e.g., JSON, etc.
+
 }
 
 var Flags MyFlags

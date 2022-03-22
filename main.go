@@ -37,15 +37,21 @@ var (
 	Binary  = "unset"
 	Version = "x.y.z"
 	Logger  *log.MiniLogger
+
+	// Default configurations
+	DefaultLogLevel = log.INFO
 )
 
 func init() {
-	// TODO: allow default log level (for init() trace) to be set by LDFLAGS
-	// For now, set to INFO here...
-	// TODO: Perhaps add `-i` info flag to allow explicit control
-	//Logger.SetLevel(log.INFO)
-	// Set default log-level to only output basic informational execution feedback
-	Logger = log.NewLogger(log.INFO)
+	// Create logger at the earliest
+	Logger = log.NewDefaultLogger()
+
+	// Check for log-related flags (anywhere) and apply to logger
+	// as early as possible (before customary Cobra flag formalization)
+	// NOTE: the last log-level flag found, in order of appearance "wins"
+	Logger.InitLogLevelAndModeFromFlags(DefaultLogLevel)
+
+	// Emit log level used from this point forward
 	Logger.Trace(fmt.Sprintf("Logger (%T) created: with Level=`%v`", Logger, Logger.GetLevelName()))
 
 	// Provide access to project logger to other modules
@@ -63,9 +69,12 @@ func init() {
 }
 
 func printWelcome() {
-	echo := fmt.Sprintf("Welcome to the %s! Version `%s` (%s)\n", Project, Version, Binary)
-	Logger.DumpString(echo)
-	Logger.DumpSeparator('=', len(echo))
+	// Only print welcome if log level requested indicates INFO level (or higher)
+	if !Logger.QuietModeOn() {
+		echo := fmt.Sprintf("Welcome to the %s! Version `%s` (%s)\n", Project, Version, Binary)
+		Logger.DumpString(echo)
+		Logger.DumpSeparator('=', len(echo))
+	}
 }
 
 func main() {

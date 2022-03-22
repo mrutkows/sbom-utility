@@ -23,9 +23,10 @@ import (
 )
 
 // TODO: What is the value of this wrapper method over basic encoder?
-func ConvertMapToJson(name string, mapIn interface{}) ([]byte, error) {
-	strMapOut, err := json.MarshalIndent(mapIn, "", "  ")
-	return strMapOut, err
+func ConvertMapToJson(name string, mapIn interface{}) (string, error) {
+	// Indent each level with 2 space chars.
+	byteMapOut, err := json.MarshalIndent(mapIn, "", "  ")
+	return string(byteMapOut), err
 }
 
 // TODO: function NOT complete, only placeholder type switch

@@ -27,6 +27,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	ERROR_APPLICATION = 1
+	ERROR_VALIDATION  = 2
+)
+
 var ProjectLogger *log.MiniLogger
 
 const (
@@ -38,6 +43,8 @@ const (
 	FLAG_FILENAME_INPUT_SHORT  = "i"
 	FLAG_FILENAME_OUTPUT       = "output-file"
 	FLAG_FILENAME_OUTPUT_SHORT = "o"
+	FLAG_QUIET_MODE            = "quiet"
+	FLAG_QUIET_MODE_SHORT      = "q"
 )
 
 const (
@@ -53,16 +60,22 @@ var rootCmd = &cobra.Command{
 	RunE:          RootCmdImpl,
 }
 
+func getLogger() *log.MiniLogger {
+	if ProjectLogger == nil {
+		// TODO: use LDFLAGS to turn on "TRACE" (and require creation of a Logger)
+		// ONLY if needed to debug init() methods in the "cmd" package
+		ProjectLogger = log.NewLogger(log.INFO)
+	}
+	return ProjectLogger
+}
+
 // initialize the module; primarily, initialize cobra
 // NOTE: the "cmd" module is problematic as we actually are required to
 // use init() to configure Cobra.  So if we want to debug that init(),
 // that module actually has to create a logger simply for init() and the
 // initConfig() callback.
 func init() {
-	// TODO: use LDFLAGS to turn on "TRACE" (and require creation of a Logger)
-	// ONLY if needed to debug init() methods in the "cmd" package
-	ProjectLogger = log.NewLogger(log.INFO)
-	ProjectLogger.Enter()
+	getLogger().Enter()
 
 	// Tell Cobra what our Cobra "init" call back method is
 	cobra.OnInitialize(initConfig)
@@ -74,64 +87,73 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&utils.Flags.InputFile, FLAG_FILENAME_INPUT, FLAG_FILENAME_INPUT_SHORT, "", "input filename")
 	rootCmd.PersistentFlags().StringVarP(&utils.Flags.OutputFile, FLAG_FILENAME_OUTPUT, FLAG_FILENAME_OUTPUT_SHORT, "", "output filename")
 
-	ProjectLogger.Exit()
+	// NOTE: Although we check for the quiet mode flag in main; we track the flag
+	// using Cobra framework in order to enable more comprehensive help
+	// and take advantage of other features.
+	rootCmd.PersistentFlags().BoolVarP(&utils.Flags.Quiet, FLAG_QUIET_MODE, FLAG_QUIET_MODE_SHORT, false, "enable quiet logging mode. Overrides other logging commands.")
+
+	getLogger().Exit()
 }
 
 func initConfig() {
-	ProjectLogger.Enter()
+	getLogger().Enter()
 
 	// Update log level
 	if utils.Flags.Debug {
-		ProjectLogger.SetLevel(log.DEBUG)
+		getLogger().SetLevel(log.DEBUG)
 	} else if utils.Flags.Trace {
 		// debug level implies trace
-		ProjectLogger.SetLevel(log.TRACE)
+		getLogger().SetLevel(log.TRACE)
 	}
 
 	// Print global flags in debug mode
 	flagInfo, err := log.FormatStruct("Flags", utils.Flags)
 	if err != nil {
-		ProjectLogger.Error(err.Error())
+		getLogger().Error(err.Error())
 	} else {
-		ProjectLogger.Debug(flagInfo)
+		getLogger().Debug(flagInfo)
 	}
 
 	// Print logger settings in debug mode
 	logInfo, err2 := log.FormatStruct("Flags", utils.Flags)
 	if err2 != nil {
-		ProjectLogger.Error(err2.Error())
+		getLogger().Error(err2.Error())
 	} else {
-		ProjectLogger.Debug(logInfo)
+		getLogger().Debug(logInfo)
 	}
+
+	// NOTE: some commands operate just on JSON SBOM,
+	// we leave the code below "in place" as we still want to validate any
+	// input file as JSON SBOM document that matches a known format/version
 
 	// Load application configuration files
 	// i.e., Format/Schemas in this case
 	errCfg := schema.LoadFormatBasedSchemas(DEFAULT_CONFIG)
 	if errCfg != nil {
-		ProjectLogger.Error(errCfg.Error())
+		getLogger().Error(errCfg.Error())
 	}
 
-	ProjectLogger.Exit()
+	getLogger().Exit(ERROR_APPLICATION)
 }
 
 func RootCmdImpl(cmd *cobra.Command, args []string) error {
-	ProjectLogger.Enter()
+	getLogger().Enter()
 	// no commands (empty) passed; display help
 	if len(args) == 0 {
 		cmd.Help()
-		os.Exit(0)
+		os.Exit(ERROR_APPLICATION)
 	}
-	ProjectLogger.Exit()
+	getLogger().Exit()
 	return nil
 }
 
 func Execute() {
 	// instead of creating a dependency on the "main" module
-	ProjectLogger.Enter()
+	getLogger().Enter()
 	if err := rootCmd.Execute(); err != nil {
 		// TODO: use log errors
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		os.Exit(ERROR_APPLICATION)
 	}
-	ProjectLogger.Exit()
+	getLogger().Exit()
 }

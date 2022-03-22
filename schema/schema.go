@@ -62,7 +62,7 @@ type Sbom struct {
 	filename    string
 	absFilename string
 	rawBytes    []byte
-	jsonMap     map[string]interface{}
+	JsonMap     map[string]interface{}
 	FormatInfo  SchemaFormat
 	SchemaInfo  SchemaInstance
 }
@@ -75,14 +75,22 @@ func NewSbom(inputfile string) *Sbom {
 	return &temp
 }
 
+func (sbom *Sbom) GetFilename() string {
+	return sbom.filename
+}
+
+func (sbom *Sbom) GetMap() map[string]interface{} {
+	return sbom.JsonMap
+}
+
 func (sbom *Sbom) GetKeyValueAsString(key string) (string, error) {
 	ProjectLogger.Enter()
-	if (sbom.jsonMap) == nil {
+	if (sbom.JsonMap) == nil {
 		err := fmt.Errorf("document object does not have a Map allocated")
 		ProjectLogger.Error(err)
 		return "", err
 	}
-	value := sbom.jsonMap[key]
+	value := sbom.JsonMap[key]
 
 	if value == nil {
 		ProjectLogger.Trace(fmt.Sprintf("key: `%s` not found in document map", key))
@@ -132,16 +140,20 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 	ProjectLogger.Trace(fmt.Sprintf("rawBytes[:100]=[%s]", sbom.rawBytes[:100]))
 
 	// Attempt to unmarshal the prospective JSON document to a map
-	sbom.jsonMap = make(map[string]interface{})
-	errUnmarshal := json.Unmarshal(sbom.rawBytes, &(sbom.jsonMap))
+	sbom.JsonMap = make(map[string]interface{})
+	errUnmarshal := json.Unmarshal(sbom.rawBytes, &(sbom.JsonMap))
 	if errUnmarshal != nil {
+
+		DisplayUnmarshalErrorDetails(sbom.rawBytes, errUnmarshal)
+
 		// TODO: make an "ExitError() method in log package"
 		ProjectLogger.Error(errUnmarshal)
 		ProjectLogger.Exit()
+		return errUnmarshal
 	}
 
 	// Print the data type of result variable
-	ProjectLogger.Trace(fmt.Sprintf("sbom.jsonMap(%s)", reflect.TypeOf(sbom.jsonMap)))
+	ProjectLogger.Trace(fmt.Sprintf("sbom.jsonMap(%s)", reflect.TypeOf(sbom.JsonMap)))
 	ProjectLogger.Exit()
 	return nil
 }
@@ -205,6 +217,38 @@ func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 	ProjectLogger.Error(errSchema.Error())
 	ProjectLogger.Exit()
 	return errSchema
+}
+
+func DisplayUnmarshalErrorDetails(data []byte, err error) {
+
+	if jsonError, ok := err.(*json.SyntaxError); ok {
+		line, character := calcLineAndCharacterPos(data, jsonError.Offset)
+		ProjectLogger.Error(fmt.Sprintf("JSON Syntax error: offset: %d, line %d, character %d: %v\n", jsonError.Offset, line, character, jsonError.Error()))
+
+	} else if jsonError, ok := err.(*json.UnmarshalTypeError); ok {
+		line, character := calcLineAndCharacterPos(data, jsonError.Offset)
+		ProjectLogger.Error(fmt.Sprintf("JSON Unmarshal error: offset: %d, line %d, character %d: %v\n", jsonError.Offset, line, character, jsonError.Error()))
+	}
+}
+
+const LF byte = 0x0a
+
+func calcLineAndCharacterPos(data []byte, offset int64) (linenum int, charnum int) {
+
+	line := 1
+	char := 0
+	intOffset := int(offset)
+
+	for i := 0; i < len(data) && i < intOffset; i, char = i+1, char+1 {
+
+		if data[i] == LF {
+			linenum++
+			//fmt.Printf("NEWLINE (%v): total: %d, offset: %d\n", LF, line, char)
+			char = 0
+		}
+	}
+
+	return line, char
 }
 
 // TODO: use a Hash map to look up known schemas using the following `SchemaKey`

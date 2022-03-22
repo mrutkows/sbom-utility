@@ -25,9 +25,9 @@ import (
 )
 
 func init() {
-	ProjectLogger.Enter()
+	getLogger().Enter()
 	rootCmd.AddCommand(versionCmd)
-	ProjectLogger.Exit()
+	getLogger().Exit()
 }
 
 var versionCmd = &cobra.Command{
@@ -35,9 +35,9 @@ var versionCmd = &cobra.Command{
 	Short: "display program, binary and version information",
 	Long:  "display program, binary and version information in SemVer format (e.g., `<project> version <x.y.z>`)",
 	Run: func(cmd *cobra.Command, args []string) {
-		ProjectLogger.Enter()
+		getLogger().Enter()
 		// TODO: print cpu architecture of binary (e.g., go version go1.16.3 darwin/amd64)
 		fmt.Printf("%s version %s\n", utils.Flags.Project, utils.Flags.Version)
-		ProjectLogger.Enter()
+		getLogger().Exit()
 	},
 }

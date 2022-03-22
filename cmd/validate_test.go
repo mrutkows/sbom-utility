@@ -18,12 +18,8 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"strings"
 	"testing"
 
-	"github.com/mrutkows/sbom-utility/log"
 	"github.com/mrutkows/sbom-utility/schema"
 	"github.com/mrutkows/sbom-utility/utils"
 )
@@ -52,39 +48,11 @@ const (
 	TEST_SPDX_2_2_EXAMPLE_6_SRC = "examples/spdx/example6/example6-src.json"
 )
 
-// TODO: look into passing args. to test cases to enable trace and schema version overrides
-// See: https://stackoverflow.com/questions/47045445/idiomatic-way-to-pass-variables-to-test-cases-in-golang/51102972
-//
-// var password string
-//
-// func init() {
-//	flag.StringVar(&password, "password", "", "Database Password")
-//}
-//
-// $ go test github.com/user/project -password=123345
-
 func init() {
-
 	// The packages we call need to have their loggers created
-	ProjectLogger = log.NewLogger(log.ERROR)
-	schema.ProjectLogger = ProjectLogger
-
-	// TODO: Load command line args (flags), primarily we want to turn "trace" output on
-	//flag.BoolVar(&utils.Flags.Trace, "test.trace", false, "Enable trace output")
-	//flag.BoolVar(&utils.Flags.Debug, "debug", false, "Enable debug output")
-	// flag.Parse()
-	// fmt.Printf("os.Args[]=%v", os.Args)
-
-	// Need to change the working directory to the application root instead of
-	// the "cmd" directory where this "_test" file runs so that all test files
-	// as well as "config.json" and its referenced JSON schema files load properly.
-	wd, _ := os.Getwd()
-	last := strings.LastIndex(wd, "/")
-	os.Chdir(wd[:last])
-
-	// Need workingDir to prepend to relative test files
-	utils.Flags.WorkingDir, _ = os.Getwd()
-	fmt.Printf("utils.Flags.WorkingDir: `%s`\n", utils.Flags.WorkingDir)
+	//ProjectLogger = log.NewLogger(log.ERROR)
+	initTestInfra()
+	getLogger().Enter()
 
 	// Load application configuration files
 	// i.e., Format/Schemas in this case
@@ -92,11 +60,12 @@ func init() {
 	if errCfg != nil {
 		ProjectLogger.Error(errCfg.Error())
 	}
-
+	getLogger().Exit()
 }
 
 // TODO: support "--force" of schema file
 func innerValidate(t *testing.T, filename string) {
+	getLogger().Enter()
 
 	// Copy the test filename to the command line flags were the code looks for it
 	utils.Flags.InputFile = filename
@@ -113,7 +82,7 @@ func innerValidate(t *testing.T, filename string) {
 	if !isValid {
 		t.Errorf(`%s: invalid (%t) %v `, filename, isValid, errValidate)
 	}
-
+	getLogger().Exit()
 }
 
 // CycloneDX Tests

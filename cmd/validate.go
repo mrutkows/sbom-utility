@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mrutkows/sbom-utility/log"
 	"github.com/mrutkows/sbom-utility/schema"
 	"github.com/mrutkows/sbom-utility/utils"
 	"github.com/spf13/cobra"
@@ -31,9 +30,6 @@ import (
 const (
 	VALID   = true
 	INVALID = false
-
-	ERROR_APPLICATION = 2
-	ERROR_VALIDATION  = 1
 )
 
 var validateCmd = &cobra.Command{
@@ -45,63 +41,55 @@ var validateCmd = &cobra.Command{
 	RunE: validateCmdImpl,
 }
 
+// Add local flags to validate command
 func init() {
-	ProjectLogger.Enter()
-	// Add local flags to validate command
-	//validateCmd.Flags().BoolVarP(&utils.Flags.Strict, "strict", "", false, "use `strict` schema when available")
+	getLogger().Enter()
 	// Force a schema file to use for validation (override inferred schema)
 	validateCmd.Flags().StringVarP(&utils.Flags.ForcedJsonSchemaFile, "force", "", "", "Explicit JSON schema file URL to force for validation; overrides inferred schema")
 	// Optional schema "variant" of inferred schema (e.g, "Strict")
 	validateCmd.Flags().StringVarP(&utils.Flags.Variant, "variant", "", "", "Select named schema variant (e.g., \"strict\"")
 	rootCmd.AddCommand(validateCmd)
-	ProjectLogger.Exit()
+	getLogger().Exit()
 }
 
 func validateCmdImpl(cmd *cobra.Command, args []string) error {
-	ProjectLogger.Enter()
+	getLogger().Enter()
 	isValid, err := Validate()
 
 	if err != nil {
-		ProjectLogger.Error(err)
+		getLogger().Error(err)
 		os.Exit(ERROR_APPLICATION)
 	}
 
 	message := fmt.Sprintf("document `%s`: valid=[%t]", utils.Flags.InputFile, isValid)
 	if isValid {
-		ProjectLogger.Info(message)
+		getLogger().Info(message)
 	} else {
-		ProjectLogger.Error(message)
+		getLogger().Error(message)
 		os.Exit(ERROR_VALIDATION)
 	}
 
-	ProjectLogger.Exit(isValid)
+	getLogger().Exit()
 	return nil
 }
 
 func Validate() (bool, error) {
-	ProjectLogger.Enter()
-	ProjectLogger.Trace(fmt.Sprintf("utils.Flags.InputFile: `%s`", utils.Flags.InputFile))
+	getLogger().Enter()
 
-	// check for required fields on command
-	if utils.Flags.InputFile == "" {
-		return INVALID, fmt.Errorf("invalid input file: `%s` ", utils.Flags.InputFile)
+	// Attempt to load and unmarshal the input file as a Json document
+	document, errLoad := LoadInputFileAndUnmarshal()
+
+	if errLoad != nil {
+		getLogger().Error(errLoad)
+		return INVALID, errLoad
 	}
 
-	document := schema.NewSbom(utils.Flags.InputFile)
-
-	ProjectLogger.Info(fmt.Sprintf("Validating file `%s`...", utils.Flags.InputFile))
-
-	// Load the raw, candidate SBOM (file) as JSON data
-	document.UnmarshalSBOM() // i.e., utils.Flags.InputFile
-
-	u, _ := log.FormatStruct("", document)
-	fmt.Printf("%s\n", u)
-
+	// Find the schema to use for validation (either "forced" via cmd line or inferred from document)
 	if utils.Flags.ForcedJsonSchemaFile != "" {
 
 		document.SchemaInfo = *new(schema.SchemaInstance)
 		document.SchemaInfo.File = utils.Flags.ForcedJsonSchemaFile
-		ProjectLogger.Info(fmt.Sprintf("Schema file forced (i.e., `--force %s`)", utils.Flags.ForcedJsonSchemaFile))
+		getLogger().Info(fmt.Sprintf("Validating document using forced schema (i.e., `--force %s`)", utils.Flags.ForcedJsonSchemaFile))
 	} else {
 
 		// Search the document keys/values for known SBOM formats and schema
@@ -109,7 +97,7 @@ func Validate() (bool, error) {
 
 		// Load schema based upon document declarations of schema format and version
 		if errFind != nil {
-			ProjectLogger.Error(errFind)
+			getLogger().Error(errFind)
 			return INVALID, errFind
 		}
 	}
@@ -117,46 +105,50 @@ func Validate() (bool, error) {
 	// TODO: support remote schema load (via URL) with a flag (default should always be local file for security)
 	// TODO: support "latest" schema load (flag) for version (i.e., override version declared in document)
 	var schemaURL = document.SchemaInfo.File
-	ProjectLogger.Info(fmt.Sprintf("Loading schema `%s`...", schemaURL))
+	getLogger().Info(fmt.Sprintf("Loading schema `%s`...", schemaURL))
 	schemaLoader := gojsonschema.NewReferenceLoader(schemaURL)
 
 	// create a reusable schema object (to validate multiple documents)
 	schema, err := gojsonschema.NewSchema(schemaLoader)
 
 	if err != nil {
-		ProjectLogger.Error(err)
+		getLogger().Error(err)
 		return INVALID, err
 	}
 
-	ProjectLogger.Info(fmt.Sprintf("Schema `%s` loaded.", schemaURL))
+	getLogger().Info(fmt.Sprintf("Schema `%s` loaded.", schemaURL))
 
 	// Create a JSON load for the actual document
 	documentLoader := gojsonschema.NewReferenceLoader("file://" + utils.Flags.InputFile)
 
 	result, errValidate := schema.Validate(documentLoader)
-	ProjectLogger.Info(fmt.Sprintf("result.Valid(): `%t`.", result.Valid()))
+	getLogger().Trace(fmt.Sprintf("result.Valid(): `%t`.", result.Valid()))
 
 	// Catch general errors from the validation module itself
 	// Note: actual validation errors are in the `result` object
 	if errValidate != nil {
-		ProjectLogger.Error(errValidate)
+		getLogger().Error(errValidate)
 		return INVALID, errValidate
 	}
 
 	// Log each validation result errors (i.e., actual validation errors found in the document)
 	errs := result.Errors()
+	ListErrors(errs)
+
+	getLogger().Exit(result.Valid())
+	return result.Valid(), nil
+}
+
+func ListErrors(errs []gojsonschema.ResultError) {
 	lenErrs := len(errs)
 	if lenErrs > 0 {
-		ProjectLogger.Error(fmt.Sprintf("(%d) Schema errors detected:", lenErrs))
+		getLogger().Error(fmt.Sprintf("(%d) Schema errors detected:", lenErrs))
 		for i, resultError := range errs {
-			ProjectLogger.Error(fmt.Sprintf(">> %d. [%s] [%s]: \"%s\"",
+			getLogger().Error(fmt.Sprintf(">> %d. [%s] [%s]: \"%s\"",
 				i+1,
 				resultError.Type(),
 				resultError.Field(),
 				resultError.Description()))
 		}
 	}
-
-	ProjectLogger.Exit(result.Valid())
-	return result.Valid(), nil
 }

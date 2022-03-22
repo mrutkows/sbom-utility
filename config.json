@@ -77,6 +77,14 @@
                         "strict": true,
                         "latest": true,
                         "variant": "ibm"
+                  },
+                  {
+                        "version": "1.4",
+                        "file": "file://schema/cyclonedx/1.4/bom-1.4.schema.json",
+                        "url": "",
+                        "strict": false,
+                        "latest": true,
+                        "variant": ""
                   }
             ]
             }

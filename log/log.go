@@ -41,10 +41,10 @@ const MAX_INDENT uint = 8
 // WARNING: some functional logic may assume incremental ordering of levels
 const (
 	ERROR   Level = iota // 0 - Always output errors (stop execution)
-	WARNING              // 1 - Always output (keep executing)
-	INFO                 // 2 - General processing information
-	TRACE                // 3 - Also, output functional info. (signature, parameter); include UTC timestamps
-	DEBUG                // 4 - Also, output internal logic and data (timestamps included)
+	WARNING              // 1 - Always output warnings (continue executing)
+	INFO                 // 2 - General processing information (processing milestones)
+	TRACE                // 3 - In addition to INFO, output functional info. (signature, parameter)
+	DEBUG                // 4 - In addition to TRACE, output internal logic and intra-functional data
 )
 
 // TODO: Allow colorization to be a configurable option.
@@ -68,6 +68,7 @@ type MiniLogger struct {
 	indentCounter uint
 	tagEnter      string
 	tagExit       string
+	quietMode     bool
 }
 
 func NewDefaultLogger() *MiniLogger {
@@ -95,6 +96,14 @@ func (log *MiniLogger) GetLevel() Level {
 	return log.logLevel
 }
 
+func (log *MiniLogger) SetQuietMode(on bool) {
+	log.quietMode = on
+}
+
+func (log *MiniLogger) QuietModeOn() bool {
+	return log.quietMode
+}
+
 func (log *MiniLogger) GetLevelName() string {
 	return LevelNames[log.logLevel]
 }
@@ -106,20 +115,65 @@ func (log *MiniLogger) SetIndentSpaces(spaces uint) {
 	}
 }
 
+// Helper method to check for and set typical log-related flags
+// NOTE: Assumes these do not collide with existing flags set by importing application
+func (log *MiniLogger) InitLogLevelAndModeFromFlags(defaultLevel Level) Level {
+
+	// Pre-set the requested default level
+	log.SetLevel(defaultLevel)
+
+	// Check for log-related flags (anywhere) and apply to logger
+	// as early as possible (before customary Cobra flag formalization)
+	// NOTE: the last log-level flag found, in order of appearance "wins"
+	for _, arg := range os.Args[1:] {
+		if arg == "-q" || arg == "--quiet" {
+			// Quiet mode is an override concept
+			// continue to process other log-level flags
+			log.SetQuietMode(true)
+		} else if arg == "-d" || arg == "--debug" {
+			log.SetLevel(DEBUG)
+		} else if arg == "-t" || arg == "--trace" {
+			log.SetLevel(TRACE)
+		}
+	}
+
+	return log.GetLevel()
+}
+
 func (log MiniLogger) Trace(value interface{}) {
 	log.dumpInterface(TRACE, "", value, STACK_SKIP)
+}
+
+func (log MiniLogger) Tracef(format string, value ...interface{}) {
+	message := fmt.Sprintf(format, value...)
+	log.dumpInterface(TRACE, "", message, STACK_SKIP)
 }
 
 func (log MiniLogger) Debug(value interface{}) {
 	log.dumpInterface(DEBUG, "", value, STACK_SKIP)
 }
 
+func (log MiniLogger) Debugf(format string, value ...interface{}) {
+	message := fmt.Sprintf(format, value...)
+	log.dumpInterface(DEBUG, "", message, STACK_SKIP)
+}
+
 func (log MiniLogger) Info(value interface{}) {
 	log.dumpInterface(INFO, "", value, STACK_SKIP)
 }
 
+func (log MiniLogger) Infof(format string, value ...interface{}) {
+	message := fmt.Sprintf(format, value...)
+	log.dumpInterface(INFO, "", message, STACK_SKIP)
+}
+
 func (log MiniLogger) Warning(value interface{}) {
 	log.dumpInterface(WARNING, "", value, STACK_SKIP)
+}
+
+func (log MiniLogger) Warningf(format string, value ...interface{}) {
+	message := fmt.Sprintf(format, value...)
+	log.dumpInterface(WARNING, "", message, STACK_SKIP)
 }
 
 // TODO: use fmt.fError ins some manner and/or os.Stderr
@@ -127,17 +181,20 @@ func (log MiniLogger) Error(value interface{}) {
 	log.dumpInterface(ERROR, "", value, STACK_SKIP)
 }
 
+func (log MiniLogger) Errorf(format string, value ...interface{}) error {
+	err := fmt.Errorf(format, value...)
+	log.dumpInterface(ERROR, "", err, STACK_SKIP)
+	return err
+}
+
 // Specialized function entry/exit trace
-// TODO: make variadic and dump args
+// Note: can pass in "args[]" or params as needed to have a single logging line
 func (log MiniLogger) Enter(values ...interface{}) {
-	// TODO: make variadic and dump args
-	//log.dumpInterface(TRACE, log.tagEnter, nil, STACK_SKIP)
 
 	sb := bytes.NewBufferString(log.tagEnter)
 	if len(values) > 0 {
 		sb.WriteByte('(')
 		for index, value := range values {
-			// TODO: if type is `error`, highlight/colorize (bright red)
 			sb.WriteString(fmt.Sprintf("(%T):%+v", value, value))
 			if (index + 1) < len(values) {
 				sb.WriteString(", ")
@@ -150,6 +207,7 @@ func (log MiniLogger) Enter(values ...interface{}) {
 }
 
 // exit and print returned values (typed)
+// Note: can function "returns" as needed to have a single logging line
 func (log MiniLogger) Exit(values ...interface{}) {
 
 	sb := bytes.NewBufferString(log.tagExit)
@@ -169,12 +227,20 @@ func (log MiniLogger) Exit(values ...interface{}) {
 }
 
 // Note: currently, "dump" methods output directly to stdout (stderr)
+// Note: we comment out any "self-logging" or 'debug" for performance for release builds
 // compose log output using a bytebuffer for performance
 func (log MiniLogger) dumpInterface(lvl Level, tag string, value interface{}, skip int) {
 
-	//fmt.Printf("dumpInterface(): level=%v, loglevel=%v\n", lvl, log.logLevel)
+	// Check for quiet mode enabled;
+	// if so, suppress any logging that is not an error
+	if log.quietMode { // && log.logLevel != ERROR {
+		return
+	}
+
+	// Only (prepare to) output if intended log level is less than
+	// the current globally set log level
 	if lvl <= log.logLevel {
-		// TODO: create a logging package that can indent based upon stack size
+		// TODO: Support indentation based upon stack size
 		// Note: the "Callers()" method will not append() so allocate a large array
 		// var mystack []uintptr = make([]uintptr, 10)
 		// stacksize := runtime.Callers(0, mystack)
@@ -205,22 +271,24 @@ func (log MiniLogger) dumpInterface(lvl Level, tag string, value interface{}, sk
 				// Append basic filename, line number, function name
 				basicFile := fn[strings.LastIndex(fn, "/")+1:]
 				sb.WriteString(fmt.Sprintf("%s(%d) ", basicFile, line))
-			}
 
-			// TODO: add logger flag to show full module paths (not just module.function)\
-			function := runtime.FuncForPC(pc)
-			basicModFnName := function.Name()[strings.LastIndex(function.Name(), "/")+1:]
-			sb.WriteString(fmt.Sprintf("%s()", basicModFnName))
+				// TODO: add logger flag to show full module paths (not just module.function)\
+				function := runtime.FuncForPC(pc)
+				basicModFnName := function.Name()[strings.LastIndex(function.Name(), "/")+1:]
+				sb.WriteString(fmt.Sprintf("%s()", basicModFnName))
 
-			// Append (optional) tag
-			if tag != "" {
-				sb.WriteString(fmt.Sprintf(": %s", tag))
+				// Append (optional) tag
+				if tag != "" {
+					sb.WriteString(fmt.Sprintf(": %s: ", tag))
+				}
+
 			}
 
 			// Append (optional) value
 			if value != nil {
-				sb.WriteString(fmt.Sprintf(": %+v", value))
+				sb.WriteString(fmt.Sprintf("%+v", value))
 			}
+
 			// TODO: use a general output writer (set to stdout, stderr, or filestream)
 			fmt.Println(sb.String())
 		} else {
@@ -253,15 +321,15 @@ func (log MiniLogger) DumpArgs() {
 	}
 }
 
-func (log MiniLogger) DumpSeparator(sep byte, repeat int) error {
+func (log MiniLogger) DumpSeparator(sep byte, repeat int) (string, error) {
 	if repeat <= 80 {
 		sb := bytes.NewBufferString("")
 		for i := 0; i < repeat; i++ {
 			sb.WriteByte(sep)
 		}
 		fmt.Println(sb.String())
-		return nil
+		return sb.String(), nil
 	} else {
-		return errors.New("invalid repeat length (>80)")
+		return "", errors.New("invalid repeat length (>80)")
 	}
 }

@@ -178,7 +178,7 @@
           "pattern": "^([A-Za-z0-9][A-Za-z0-9-(). ]{1,126}[A-Za-z0-9.()])$",
           "enum": [
             "IBM",
-            "IBM Product Transformation Center"
+            "WhiteSource"
           ]
         },
         "name": {
@@ -188,7 +188,8 @@
           "pattern": "^([A-Za-z0-9][A-Za-z0-9-(). ]{1,126}[A-Za-z0-9.()])$",
           "enum": [
             "PTC Scanning Tool",
-            "Code Risk Analyzer (CRA)"
+            "IBM Cloud Continuous Delivery - Code Risk Analyzer",
+            "White Source SBOM Report Generator"
           ]
         },
         "version": {
