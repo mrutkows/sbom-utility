@@ -3,3 +3,7 @@
 
 # IDEs
 *.code-workspace
+
+# Misc
+*.gpg
+a.txt

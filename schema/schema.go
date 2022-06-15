@@ -84,25 +84,28 @@ func (sbom *Sbom) GetMap() map[string]interface{} {
 }
 
 func (sbom *Sbom) GetKeyValueAsString(key string) (string, error) {
-	ProjectLogger.Enter()
+	ProjectLogger.Enter(key)
 	if (sbom.JsonMap) == nil {
 		err := fmt.Errorf("document object does not have a Map allocated")
 		ProjectLogger.Error(err)
+		ProjectLogger.Exit(err)
 		return "", err
 	}
 	value := sbom.JsonMap[key]
 
 	if value == nil {
 		ProjectLogger.Trace(fmt.Sprintf("key: `%s` not found in document map", key))
+		ProjectLogger.Exit(nil)
 		return "", nil
 	}
 
-	ProjectLogger.Exit(value)
+	ProjectLogger.Exit(key, ':', value)
 	return value.(string), nil
 }
 
 func (sbom *Sbom) UnmarshalSBOM() error {
 	ProjectLogger.Enter()
+	defer ProjectLogger.Exit()
 
 	// validate filename
 	if len(sbom.filename) == 0 {
@@ -135,9 +138,8 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 	sbom.rawBytes, errReadAll = ioutil.ReadAll(jsonFile)
 	if errReadAll != nil {
 		ProjectLogger.Error(errReadAll)
-		ProjectLogger.Exit()
 	}
-	ProjectLogger.Trace(fmt.Sprintf("rawBytes[:100]=[%s]", sbom.rawBytes[:100]))
+	ProjectLogger.Trace(fmt.Sprintf("\n  >> rawBytes[:100]=[%s]", sbom.rawBytes[:100]))
 
 	// Attempt to unmarshal the prospective JSON document to a map
 	sbom.JsonMap = make(map[string]interface{})
@@ -148,18 +150,17 @@ func (sbom *Sbom) UnmarshalSBOM() error {
 
 		// TODO: make an "ExitError() method in log package"
 		ProjectLogger.Error(errUnmarshal)
-		ProjectLogger.Exit()
 		return errUnmarshal
 	}
 
 	// Print the data type of result variable
 	ProjectLogger.Trace(fmt.Sprintf("sbom.jsonMap(%s)", reflect.TypeOf(sbom.JsonMap)))
-	ProjectLogger.Exit()
 	return nil
 }
 
 func (sbom *Sbom) FindFormatAndSchema() error {
 	ProjectLogger.Enter()
+	defer ProjectLogger.Exit()
 
 	// Iterate over known formats to see if SBOM document contains a known value
 	for _, format := range KnownSchemas.Formats {
@@ -176,10 +177,8 @@ func (sbom *Sbom) FindFormatAndSchema() error {
 
 			if errFindSchema != nil {
 				ProjectLogger.Error(errFindSchema.Error())
-				ProjectLogger.Exit()
 				return errFindSchema
 			}
-			ProjectLogger.Exit()
 			return nil
 		}
 	}
@@ -187,12 +186,12 @@ func (sbom *Sbom) FindFormatAndSchema() error {
 	// Did not find the format in our list
 	errFindFormat := errors.New("schema: unknown format")
 	ProjectLogger.Error(errFindFormat.Error())
-	ProjectLogger.Exit()
 	return errFindFormat
 }
 
 func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 	ProjectLogger.Enter()
+	defer ProjectLogger.Exit()
 
 	// Iterate over known schema versions to see if SBOM's version is supported
 	for _, schema := range format.Schemas {
@@ -205,7 +204,6 @@ func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 			if utils.Flags.Variant == schema.Variant {
 				ProjectLogger.Trace(fmt.Sprintf("Schema.Variant: matched: `%s`", schema.Variant))
 				sbom.SchemaInfo = schema
-				ProjectLogger.Exit()
 				return nil
 			} else {
 				ProjectLogger.Trace(fmt.Sprintf("Schema.Variant: `%s` did not match requested Variant: `%s`", schema.Variant, utils.Flags.Variant))
@@ -215,7 +213,6 @@ func (sbom *Sbom) findSchema(format SchemaFormat, version string) error {
 
 	errSchema := fmt.Errorf("schema: unsupported version `%s` for format `%s`", version, format.CanonicalName)
 	ProjectLogger.Error(errSchema.Error())
-	ProjectLogger.Exit()
 	return errSchema
 }
 

@@ -22,6 +22,12 @@ import (
 	"fmt"
 )
 
+func IsValidJSON(test string) bool {
+	var js map[string]interface{}
+	err := json.Unmarshal([]byte(test), &js)
+	return err == nil
+}
+
 // TODO: What is the value of this wrapper method over basic encoder?
 func ConvertMapToJson(name string, mapIn interface{}) (string, error) {
 	// Indent each level with 2 space chars.

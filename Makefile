@@ -46,7 +46,7 @@ unit_tests:
 # Run the integration tests
 integration_test:
 	@echo "Launch the integration tests."
-	go test -v ./... -tags=integration
+	go test -v ./...
 
 format:
 	@echo "Formatting"

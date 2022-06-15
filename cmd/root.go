@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -26,6 +27,15 @@ import (
 	"github.com/mrutkows/sbom-utility/utils"
 	"github.com/spf13/cobra"
 )
+
+// !!! SECRET SAUCE !!!
+// NOTE: Go test framework uses the "flags" package and all we need
+// do is declare a new global for it to be recognized.
+// USAGE: to set on command line and have it parsed, simply append
+// it as follows: '--args -trace'
+var TestLogLevelTrace = flag.Bool("trace", false, "")
+var TestLogLevelError = flag.Bool("error", false, "")
+var TestLogQuiet = flag.Bool("quiet", false, "")
 
 const (
 	ERROR_APPLICATION = 1
@@ -45,10 +55,13 @@ const (
 	FLAG_FILENAME_OUTPUT_SHORT = "o"
 	FLAG_QUIET_MODE            = "quiet"
 	FLAG_QUIET_MODE_SHORT      = "q"
+	FLAG_LOG_OUTPUT_INDENT     = "indent"
+	FLAG_FILE_OUTPUT_FORMAT    = "format"
 )
 
 const (
-	DEFAULT_CONFIG = "config.json"
+	DEFAULT_CONFIG           = "config.json"
+	DEFAULT_LICENSE_POLICIES = "license.json"
 )
 
 var rootCmd = &cobra.Command{
@@ -64,7 +77,13 @@ func getLogger() *log.MiniLogger {
 	if ProjectLogger == nil {
 		// TODO: use LDFLAGS to turn on "TRACE" (and require creation of a Logger)
 		// ONLY if needed to debug init() methods in the "cmd" package
-		ProjectLogger = log.NewLogger(log.INFO)
+		ProjectLogger = log.NewLogger(log.ERROR)
+
+		// Attempt to read in `--args` values such as `--trace`
+		// Note: if they exist, quiet mode will be overridden
+		// Default to ERROR level and, turn on "Quiet mode" for tests
+		// This simplifies the test output to simply RUN/PASS|FAIL messages.
+		ProjectLogger.InitLogLevelAndModeFromFlags()
 	}
 	return ProjectLogger
 }
@@ -76,6 +95,7 @@ func getLogger() *log.MiniLogger {
 // initConfig() callback.
 func init() {
 	getLogger().Enter()
+	defer getLogger().Exit()
 
 	// Tell Cobra what our Cobra "init" call back method is
 	cobra.OnInitialize(initConfig)
@@ -92,13 +112,26 @@ func init() {
 	// and take advantage of other features.
 	rootCmd.PersistentFlags().BoolVarP(&utils.Flags.Quiet, FLAG_QUIET_MODE, FLAG_QUIET_MODE_SHORT, false, "enable quiet logging mode. Overrides other logging commands.")
 
-	getLogger().Exit()
+	// Optionally, allow log callstack trace to be indented
+	rootCmd.PersistentFlags().BoolVarP(&utils.Flags.LogOutputIndentCallstack, FLAG_LOG_OUTPUT_INDENT, "", false, "enable log indentation of functional callstack.")
+
+	// Add commands
+	rootCmd.AddCommand(NewCommandVersion())
+	rootCmd.AddCommand(NewCommandSchema())
+	rootCmd.AddCommand(NewCommandValidate())
+	rootCmd.AddCommand(NewCommandQuery())
+	licenseCmd := NewCommandLicense()
+
+	licenseCmd.AddCommand(NewCommandList())
+	licenseCmd.AddCommand(NewCommandPolicy())
+	rootCmd.AddCommand(licenseCmd)
 }
 
 func initConfig() {
 	getLogger().Enter()
+	defer getLogger().Exit()
 
-	// Update log level
+	// Update log level from command line flags (or simulated by test env.)
 	if utils.Flags.Debug {
 		getLogger().SetLevel(log.DEBUG)
 	} else if utils.Flags.Trace {
@@ -106,54 +139,63 @@ func initConfig() {
 		getLogger().SetLevel(log.TRACE)
 	}
 
+	// Other settings used by logger
+	getLogger().SetQuietMode(utils.Flags.Quiet)
+	getLogger().EnableIndent(utils.Flags.LogOutputIndentCallstack)
+
 	// Print global flags in debug mode
-	flagInfo, err := log.FormatStruct("Flags", utils.Flags)
+	flagInfo, err := getLogger().FormatStructE(utils.Flags)
 	if err != nil {
 		getLogger().Error(err.Error())
 	} else {
-		getLogger().Debug(flagInfo)
-	}
-
-	// Print logger settings in debug mode
-	logInfo, err2 := log.FormatStruct("Flags", utils.Flags)
-	if err2 != nil {
-		getLogger().Error(err2.Error())
-	} else {
-		getLogger().Debug(logInfo)
+		getLogger().Debugf("%s: \n%s", "utils.Flags", flagInfo)
 	}
 
 	// NOTE: some commands operate just on JSON SBOM,
 	// we leave the code below "in place" as we still want to validate any
 	// input file as JSON SBOM document that matches a known format/version
 
-	// Load application configuration files
-	// i.e., Format/Schemas in this case
+	// Load application configuration file (i.e., primarily SBOM supported Formats/Schemas)
+	// TODO: page fault "load" of data only when needed
 	errCfg := schema.LoadFormatBasedSchemas(DEFAULT_CONFIG)
 	if errCfg != nil {
 		getLogger().Error(errCfg.Error())
+		os.Exit(ERROR_APPLICATION)
 	}
 
-	getLogger().Exit(ERROR_APPLICATION)
+	// i.e., License approval policies
+	// TODO: page fault "load" of data only when needed
+	errPolicies := schema.LoadLicensePolicies(DEFAULT_LICENSE_POLICIES)
+	if errPolicies != nil {
+		getLogger().Error(errPolicies.Error())
+		os.Exit(ERROR_APPLICATION)
+	}
+
+	// Hash policies for fast lookup
+	// TODO: page fault hashmap only when needed
+	hashPolicies(schema.LicensePolicyConfig.PolicyList)
 }
 
 func RootCmdImpl(cmd *cobra.Command, args []string) error {
 	getLogger().Enter()
+	defer getLogger().Exit()
+
 	// no commands (empty) passed; display help
 	if len(args) == 0 {
 		cmd.Help()
 		os.Exit(ERROR_APPLICATION)
 	}
-	getLogger().Exit()
 	return nil
 }
 
 func Execute() {
 	// instead of creating a dependency on the "main" module
 	getLogger().Enter()
+	defer getLogger().Exit()
+
 	if err := rootCmd.Execute(); err != nil {
 		// TODO: use log errors
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(ERROR_APPLICATION)
 	}
-	getLogger().Exit()
 }

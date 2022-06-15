@@ -84,7 +84,7 @@
                         "url": "",
                         "strict": false,
                         "latest": true,
-                        "variant": ""
+                        "variant": "ibm"
                   }
             ]
             }

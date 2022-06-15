@@ -30,7 +30,7 @@ func LoadInputFileAndUnmarshal() (*schema.Sbom, error) {
 
 	// check for required fields on command
 	if utils.Flags.InputFile == "" {
-		return nil, fmt.Errorf("invalid input file: `%s` ", utils.Flags.InputFile)
+		return nil, fmt.Errorf("invalid input file (-%s): `%s` ", FLAG_FILENAME_INPUT_SHORT, utils.Flags.InputFile)
 	}
 
 	document := schema.NewSbom(utils.Flags.InputFile)

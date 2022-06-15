@@ -44,12 +44,13 @@ var (
 
 func init() {
 	// Create logger at the earliest
-	Logger = log.NewDefaultLogger()
+	Logger = log.NewLogger(DefaultLogLevel)
 
 	// Check for log-related flags (anywhere) and apply to logger
 	// as early as possible (before customary Cobra flag formalization)
 	// NOTE: the last log-level flag found, in order of appearance "wins"
-	Logger.InitLogLevelAndModeFromFlags(DefaultLogLevel)
+	// Set default log level and turn "quiet mode" off
+	Logger.InitLogLevelAndModeFromFlags()
 
 	// Emit log level used from this point forward
 	Logger.Trace(fmt.Sprintf("Logger (%T) created: with Level=`%v`", Logger, Logger.GetLevelName()))
@@ -73,15 +74,14 @@ func printWelcome() {
 	if !Logger.QuietModeOn() {
 		echo := fmt.Sprintf("Welcome to the %s! Version `%s` (%s)\n", Project, Version, Binary)
 		Logger.DumpString(echo)
-		Logger.DumpSeparator('=', len(echo))
+		Logger.DumpSeparator('=', len(echo)-1)
 	}
 }
 
 func main() {
 	Logger.Enter()
+	defer Logger.Exit()
 	printWelcome()
-
 	// Use Cobra convention and execute top-level command
 	cmd.Execute()
-	Logger.Exit()
 }

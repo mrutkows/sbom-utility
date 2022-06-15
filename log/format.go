@@ -21,9 +21,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/hokaccha/go-prettyjson"
+)
+
+const (
+	EMPTY_STRING = "\"\""
+)
+
+var (
+	boldBlue   = color.New(color.FgBlue, color.Bold).SprintFunc()
+	boldGreen  = color.New(color.FgGreen, color.Bold).SprintFunc()
+	boldCyan   = color.New(color.FgCyan, color.Bold).SprintFunc()
+	boldYellow = color.New(color.FgYellow, color.Bold).SprintFunc()
 )
 
 func FormatMap(mapName string, field map[string]interface{}) (string, error) {
@@ -43,65 +56,115 @@ func FormatMap(mapName string, field map[string]interface{}) (string, error) {
 	return sb.String(), nil
 }
 
-func FormatStruct(structName string, field interface{}) (string, error) {
+func (log *MiniLogger) FormatStruct(unformatted interface{}) string {
 
-	if reflect.ValueOf(field).Kind() != reflect.Struct {
-		return "", fmt.Errorf("invalid `Struct`; actual Type: (%v)", reflect.TypeOf(field))
+	formatted, err := log.FormatStructE(unformatted)
+
+	if err != nil {
+		return err.Error()
+	}
+
+	return formatted
+}
+
+func (log *MiniLogger) FormatStructE(dataStructure interface{}) (string, error) {
+
+	return innerFormatStruct(dataStructure, log.indentRunes, log.spacesIncrement, log.maxStrLength)
+}
+
+func FormatStruct(dataStructure interface{}) (string, error) {
+	indentRunes := []rune("    ")
+	return innerFormatStruct(dataStructure, indentRunes, indentRunes, 128)
+}
+
+func innerFormatStruct(dataStructure interface{}, indentRunes []rune, spacesIncrement []rune, maxStrLen int) (string, error) {
+
+	dataReflectValue := reflect.ValueOf(dataStructure)
+	dataReflectKind := dataReflectValue.Kind()
+	dataReflectType := reflect.TypeOf(dataStructure)
+
+	if dataReflectKind != reflect.Struct {
+		return "", fmt.Errorf("invalid `Struct`; actual Type: (%v)", reflect.TypeOf(dataStructure))
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("  %s (%s) = {\n", structName, reflect.TypeOf(field)))
+	sb.WriteString(fmt.Sprintf("\n%s{\n", string(indentRunes)))
 
-	structNames := reflect.TypeOf(field)
-	numNames := structNames.NumField()
+	numFields := dataReflectType.NumField()
+
+	var fieldStruct reflect.StructField
+	var fieldName string
+	var fieldTypeString string
+	var fieldValueString string
+	var fieldLength int
 
 	// TODO: optionally, colorize keys/values; see "github.com/fatih/color" package
 	// e.g., keys=white, string=green, floats/ints=cyan, bool=yellow, nil=magenta
-	if numNames > 0 {
-		flagValues := reflect.ValueOf(field)
-		var name string
-		var value interface{}
-		var fieldType string
+	if numFields > 0 {
 
-		for i := 0; i < numNames; i++ {
-			name = structNames.Field(i).Name
+		for i := 0; i < numFields; i++ {
+			fieldStruct = dataReflectType.Field(i)
+			fieldName = fieldStruct.Name
+
 			// TODO: using the .String() method interace reduces `[]byte` values
 			// to "<[]uint8 Value>"; if you remove it, you see ALL the bytes
 			// A better solution might be to show the first 'x' bytes (slice/truncate)
-			value = flagValues.Field(i).String()
+			fieldValue := dataReflectValue.Field(i)
+			fieldValueKind := fieldValue.Kind()
 
-			//fmt.Printf("%t\n", reflect.Type.Field(i))
+			if fieldValueKind == reflect.Struct {
+				// TODO: increment runes
+				extraIndent := spacesIncrement //[]rune("  ")
+				nestedIndentedRunes := append(indentRunes, extraIndent...)
+				fieldValueString, _ = innerFormatStruct(fieldValue.Interface(), nestedIndentedRunes, spacesIncrement, maxStrLen)
+			} else if fieldValueKind == reflect.Bool {
+				fieldValueString = strconv.FormatBool(fieldValue.Bool())
+			} else {
+				fieldValueString = fieldValue.String()
+				fieldLength = len(fieldValueString)
 
-			// reflect.ValueOf(flagValues.Field(i)).Kind() == reflect.Array
+				if fieldLength == 0 {
+					fieldValueString = EMPTY_STRING
+				} else if fieldLength > maxStrLen {
+					fieldValueString = fieldValueString[:maxStrLen]
+				}
+			}
 
-			fieldType = fmt.Sprintf("(%+v)", flagValues.Field(i).Type())
-			line := fmt.Sprintf("\t%12s %-10s %s %v\n", name, fieldType, ":", value)
+			fieldTypeString = fmt.Sprintf("(%+v)", dataReflectValue.Field(i).Type())
+
+			// TODO: use tabwriter to see if we can eliminate overspacing
+			//if len(fieldValueString) > 0 {
+			line := fmt.Sprintf("%s%s%-12s %-7s %s %v\n",
+				string(indentRunes),
+				string(spacesIncrement),
+				fieldName,
+				fieldTypeString,
+				":",
+				fieldValueString)
 			sb.WriteString(line)
 		}
 	} else {
-		sb.WriteString("\t<empty>\n")
+		sb.WriteString(fmt.Sprintf("%s%s%s\n", string(indentRunes), string(spacesIncrement), "<empty>"))
 	}
-	sb.WriteString("  }\n")
+	sb.WriteString(fmt.Sprintf("%s}", string(indentRunes)))
 
 	return sb.String(), nil
 }
 
-// Output: {"ID":1,"Name":"Reds","Colors":["Crimson","Red","Ruby","Maroon"]}
-// TODO: make variadic (for optional indent param) and call "Marshal" or "MarshalIndent"
-func FormatInterfaceAsJson(a interface{}) string {
-	out, err := json.Marshal(a)
-	if err == nil {
-		return string(out)
+// Note: "go-prettyjson" colorizes output for shell output
+func FormatInterfaceAsColorizedJson(data interface{}) (string, error) {
+	formatter := prettyjson.NewFormatter()
+	bytes, err := formatter.Marshal(data)
+	if err != nil {
+		return "", err
 	}
-	return ""
+	return string(bytes), nil
 }
 
-// Note: "go-prettyjson" colorizes output for shell output
-func FormatInterfaceAsPrettyJson(rawData interface{}) (string, error) {
-	formatter := prettyjson.NewFormatter()
-	bytes, err := formatter.Marshal(rawData)
+func FormatInterfaceAsJson(data interface{}) (string, error) {
+	bytes, err := json.MarshalIndent(data, "", "    ")
 	if err != nil {
-		return fmt.Sprintf("unable to marshal data of type (%T)", rawData), err
+		return "", err
 	}
 	return string(bytes), nil
 }

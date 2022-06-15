@@ -21,34 +21,46 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mrutkows/sbom-utility/log"
 	"github.com/mrutkows/sbom-utility/schema"
 	"github.com/mrutkows/sbom-utility/utils"
 )
 
-func initTestInfra() {
-	// Turn on "Quiet mode" for tests
-	// This simplifies the output to RUN/PASS|FAIL messages.
-	// NOTE: "go test" utilizes the Go "flags" package and allows
-	// test packages to declare additional command line arguments
-	// which can be used to set log/trace levels (e.g., `--args -trace).
-	// The values for these variables are only avail. after init()
-	// processing is completed.
-	getLogger().SetQuietMode(true)
-	// Set default level to error, when quiet mode turned off
-	getLogger().SetLevel(log.ERROR)
+var TestInfraInitialized bool = false
 
+// NOTE: if we need to override test setup in our own "main" routine, you can create
+// a function named "TestMain" (and you will need to manage Init() and other setup)
+// See: https://pkg.go.dev/testing
+func initTestInfra() {
+	getLogger().Enter()
+	defer getLogger().Exit()
+
+	// Set the project logger used by the schema pkg. to ours
 	if schema.ProjectLogger == nil {
 		schema.ProjectLogger = getLogger()
 	}
 
-	// Assures we care loading relative to the application executables directory
+	// Assures we are loading relative to the application's executable directory
 	initWorkingDirectory()
+
+	// Only initialize globals once (as this fx could be called from multiple "*_test.go" files)
+	if !TestInfraInitialized {
+		TestInfraInitialized = true
+
+		// Set log/trace/debug settings as if the were set by command line flags
+		utils.Flags.Trace = *TestLogLevelTrace
+		utils.Flags.Debug = *TestLogLevelError
+		utils.Flags.Quiet = *TestLogQuiet
+
+		// Leverage the root command's init function to populate schemas, policies, etc.
+		initConfig()
+	}
 }
 
 // Set the working directory to match where the executable is being called from
 func initWorkingDirectory() {
 	getLogger().Enter()
+	defer getLogger().Exit()
+
 	// Only correct the WD base path once
 	if utils.Flags.WorkingDir == "" {
 		// Need to change the working directory to the application root instead of
@@ -64,5 +76,4 @@ func initWorkingDirectory() {
 		utils.Flags.WorkingDir, _ = os.Getwd()
 		getLogger().Tracef("Set `utils.Flags.WorkingDir`: `%s`\n", utils.Flags.WorkingDir)
 	}
-	getLogger().Exit()
 }

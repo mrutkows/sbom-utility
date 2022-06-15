@@ -37,25 +37,26 @@ type MyFlags struct {
 	Debug            bool // debug logging
 	InputFile        string
 	OutputFile       string
-	OutputSbomFormat string // TODO: future format conversion
+	OutputSbomFormat string
 
 	// Validate (local) flags
 	ForcedJsonSchemaFile string
 	Variant              string
+	ValidateProperties   bool
 
-	// Schema
-	list bool
+	// Summary formats (i.e., only valid for summary)
+	// NOTE: "query" and "list" (raw) commans always returns JSON by default
+	OutputFormat string // e.g., TXT (default), CSV, markdown (normalized to lowercase)
 
-	// Query / List commands flags
-	OutputFormat string // e.g., JSON, etc.
-
+	// Log indent
+	LogOutputIndentCallstack bool
 }
 
 var Flags MyFlags
 
 // format and output the MyFlags struct as a string using Go's Stringer interface
 func (flags *MyFlags) String() string {
-	value, err := log.FormatStruct("utils.Flags", flags)
+	value, err := log.FormatStruct(flags)
 
 	if err != nil {
 		return fmt.Sprintf("%s\n", err.Error())

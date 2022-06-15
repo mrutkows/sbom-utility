@@ -27,7 +27,7 @@ import (
 
 // Query command flags
 const (
-	FLAG_OUTPUT_FORMAT  = "output"
+	FLAG_OUTPUT_FORMAT  = "format"
 	FLAG_QUERY_SELECT   = "select"
 	FLAG_QUERY_FROM     = "from"
 	FLAG_QUERY_WHERE    = "where"
@@ -43,7 +43,7 @@ const (
 	FLAG_QUERY_ORDER_BY_HELP = "TODO"
 )
 
-// Valid `--output` formats
+// Valid `--format` formats
 const (
 	FLAG_VALUE_OUTPUT_JSON = "json"
 )
@@ -51,12 +51,15 @@ const (
 // Query error types
 const (
 	MSG_INVALID_JSON_MAP              = "invalid JSON map"
-	MSG_INVALID_QUERY_REQUEST         = "invalid query request object"
-	MSG_INVALID_QUERY_RESPONSE        = "invalid query response object"
+	MSG_INVALID_QUERY_REQUEST         = "invalid query request"
+	MSG_INVALID_QUERY_RESPONSE        = "invalid query response"
+	MSG_INVALID_QUERY_REQUEST_OBJ     = "invalid query request object"
+	MSG_INVALID_QUERY_RESPONSE_OBJ    = "invalid query response object"
 	MSG_QUERY_INVALID_SELECT_CLAUSE   = "invalid SELECT clause"
 	MSG_QUERY_INVALID_FROM_CLAUSE     = "invalid FROM clause"
 	MSG_QUERY_INVALID_WHERE_CLAUSE    = "invalid WHERE clause"
 	MSG_QUERY_INVALID_ORDER_BY_CLAUSE = "invalid ORDERBY clause"
+	MSG_QUERY_MISSING_FROM_SELECTORS  = "missing `--from` selectors"
 )
 
 // Query error details
@@ -66,8 +69,6 @@ const (
 	MSG_ERROR_SELECT_WILDARD          = "wildcard cannot be used with other values"
 )
 
-// TODO: design abbreviated syntax for command line
-// TODO: parse each clause as a separate input parameter (flag)
 // query JSON map and return selected subset
 // SELECT
 //    <key.1>, <key.2>, ... // "firstname, lastname, email" || * (default)
@@ -79,6 +80,8 @@ const (
 //    <key.N>               // "lastname"
 //
 // e.g.,SELECT * FROM product.customers WHERE country="Germany";
+// TODO: design abbreviated WHERE syntax for command line
+// TODO: design abbreviated ORDERBY syntax for command line
 type QueryRequest struct {
 	selectFieldsRaw     string
 	selectFields        []string
@@ -99,35 +102,41 @@ func (qr *QueryRequest) String() string {
 	return sb.String()
 }
 
-type QueryResult struct {
+type QueryResponse struct {
 	resultMap map[string]interface{}
 }
 
-func NewQueryResult() *QueryResult {
-	qr := new(QueryResult)
+func NewQueryResponse() *QueryResponse {
+	qr := new(QueryResponse)
 	qr.resultMap = make(map[string]interface{})
 	return qr
 }
 
-var queryCmd = &cobra.Command{
-	Use:   "query --from \"\" -i <path/input-sbom.json>",
-	Short: "query objects and values from SBOM (JSON) document",
-	Long:  "query objects and values from SBOM (JSON) document. Where <path> can be absolute or relative.The --from` is a dot-separated string of keys used to dereference into the JSON document.",
-	RunE:  queryCmdImpl,
+func NewCommandQuery() *cobra.Command {
+	var command = new(cobra.Command)
+	command.Use = "query --from \"\" -i <path/input-sbom.json>"
+	command.Short = "query objects and values from SBOM (JSON) document"
+	command.Long = "query objects and values from SBOM (JSON) document. Where <path> can be absolute or relative.The --from` is a dot-separated string of keys used to dereference into the JSON document."
+	command.RunE = queryCmdImpl
+	initCommandQuery(command)
+	return command
 }
 
-func init() {
+func initCommandQuery(command *cobra.Command) {
 	getLogger().Enter()
+	defer getLogger().Exit()
+
 	// Add local flags to command
-	rootCmd.AddCommand(queryCmd)
-	queryCmd.PersistentFlags().StringVar(&utils.Flags.OutputFormat, FLAG_OUTPUT_FORMAT, FLAG_VALUE_OUTPUT_JSON, FLAG_OUTPUT_FORMAT_HELP)
-	queryCmd.Flags().StringP(FLAG_QUERY_SELECT, "", "*", FLAG_QUERY_SELECT_HELP)
-	queryCmd.Flags().StringP(FLAG_QUERY_FROM, "", "", FLAG_QUERY_FROM_HELP)
-	queryCmd.Flags().StringP(FLAG_QUERY_WHERE, "", "", FLAG_QUERY_WHERE_HELP)
-	getLogger().Exit()
+	command.PersistentFlags().StringVar(&utils.Flags.OutputFormat, FLAG_OUTPUT_FORMAT, FLAG_VALUE_OUTPUT_JSON, FLAG_OUTPUT_FORMAT_HELP)
+	command.Flags().StringP(FLAG_QUERY_SELECT, "", "*", FLAG_QUERY_SELECT_HELP)
+	command.Flags().StringP(FLAG_QUERY_FROM, "", "", FLAG_QUERY_FROM_HELP)
+	command.Flags().StringP(FLAG_QUERY_WHERE, "", "", FLAG_QUERY_WHERE_HELP)
 }
 
 func (qr *QueryRequest) readQueryFlags(cmd *cobra.Command) error {
+	getLogger().Enter()
+	defer getLogger().Exit()
+
 	var errGetString error
 
 	// Read '--from` flag first as its result is required for any other field to operate on
@@ -169,6 +178,8 @@ func (qr *QueryRequest) readQueryFlags(cmd *cobra.Command) error {
 }
 
 func (qr *QueryRequest) parseQueryClauses() {
+	getLogger().Enter()
+	defer getLogger().Exit()
 
 	// parse out path (selectors) to JSON object from raw '--from' flag's value
 	qr.fromObjectSelectors = strings.Split(qr.fromObjectsRaw, ".")
@@ -195,6 +206,7 @@ func queryCmdImpl(cmd *cobra.Command, args []string) error {
 
 	if errLoad != nil {
 		getLogger().Error(errLoad)
+		getLogger().Exit(errLoad)
 		return errLoad
 	}
 
@@ -206,15 +218,17 @@ func queryCmdImpl(cmd *cobra.Command, args []string) error {
 	queryRequest.parseQueryClauses()
 
 	if errParseParams != nil {
+		getLogger().Exit(errParseParams)
 		return errParseParams
 	}
 
 	// allocate the result structure
-	var queryResult *QueryResult = new(QueryResult)
+	var queryResult *QueryResponse = new(QueryResponse)
 
 	result, errQuery := query(document.GetMap(), queryRequest, queryResult)
 
 	if errQuery != nil {
+		getLogger().Exit(errQuery)
 		return errQuery
 	}
 
@@ -232,8 +246,9 @@ func queryCmdImpl(cmd *cobra.Command, args []string) error {
 
 // query JSON map and return selected subset
 // i.e., use QueryRequest (syntax) to implement the query into the JSON document
-func query(JsonMap map[string]interface{}, request *QueryRequest, response *QueryResult) (interface{}, error) {
+func query(JsonMap map[string]interface{}, request *QueryRequest, response *QueryResponse) (interface{}, error) {
 	getLogger().Enter()
+	defer getLogger().Exit()
 
 	// Assure we have a map to dereference
 	if JsonMap == nil {
@@ -241,21 +256,28 @@ func query(JsonMap map[string]interface{}, request *QueryRequest, response *Quer
 	}
 
 	if request == nil {
-		return nil, fmt.Errorf(MSG_INVALID_QUERY_REQUEST)
+		return nil, fmt.Errorf(MSG_INVALID_QUERY_REQUEST_OBJ)
 	}
 
 	if response == nil {
-		return nil, fmt.Errorf(MSG_INVALID_QUERY_RESPONSE)
+		return nil, fmt.Errorf(MSG_INVALID_QUERY_RESPONSE_OBJ)
 	}
 
-	if len(request.fromObjectSelectors) == 0 {
-		return nil, fmt.Errorf("invalid query request: FROM selectors missing")
+	// allocate locals to hold results of "find" operation
+	// initialize pointer to root of document
+	var dataptr interface{} = JsonMap
+	var errFind error
+
+	// Note: this function will only use the "parsed" request data
+	// and NOT use the "raw" data passed from a command line impl.
+	// if a FROM select object is not provided, assume "root" search
+	if len(request.fromObjectSelectors) == 0 ||
+		request.fromObjectSelectors[0] == "" {
+		getLogger().Tracef("request object FROM selectors empty; assume query uses document \"root\".")
+	} else {
+		// locate the JSON object we will select from
+		dataptr, errFind = findFromObject(request, JsonMap)
 	}
-
-	getLogger().Trace(fmt.Sprintf("Querying input file using key(s): %v\n", request.fromObjectSelectors))
-
-	// locate the JSON object we will select from
-	dataptr, errFind := findFromObject(request, JsonMap)
 
 	// If we fail to find the object at the specified FROM path
 	if errFind != nil {
@@ -265,8 +287,6 @@ func query(JsonMap map[string]interface{}, request *QueryRequest, response *Quer
 	// assure that the return is indeed a JSON object (i.e., map[string]interface{})
 	findObject, ok := dataptr.(map[string]interface{})
 	if ok {
-		getLogger().Info(findObject)
-
 		// TODO: return this (map) output instead of the one from the "find" stage
 		selected, errSelect := selectFields(request, findObject)
 
@@ -278,12 +298,31 @@ func query(JsonMap map[string]interface{}, request *QueryRequest, response *Quer
 		dataptr = selected
 
 	} else {
-		getLogger().Warningf("the path declared on the '--from` flag (%s) does not dereference to a JSON object.", request.fromObjectsRaw)
+		getLogger().Warningf("the path declared on the '--from` flag (%s) does not dereference to a JSON object (%T).", request.fromObjectsRaw, dataptr)
+	}
+	return dataptr, nil
+}
+
+// Wrapper for base query function that returns a JSON map type
+func queryMap(JsonMap map[string]interface{}, request *QueryRequest, response *QueryResponse) (map[string]interface{}, error) {
+	getLogger().Enter()
+	defer getLogger().Exit()
+
+	iResult, err := query(JsonMap, request, response)
+
+	if err != nil {
+		getLogger().Error(err)
+		return nil, err
 	}
 
-	getLogger().Debugf("dataptr=%v\n", dataptr)
-	getLogger().Exit()
-	return dataptr, nil
+	// retrieve the components array from the map
+	mapResult, ok := iResult.(map[string]interface{})
+
+	if !ok {
+		return nil, getLogger().Errorf("invalid type found by query; expected `%s`, but found : `%T`", "map[string]infterface{}", iResult)
+	}
+
+	return mapResult, nil
 }
 
 // NOTE: it is the caller's responsibility to convert to other output formats
@@ -322,10 +361,15 @@ func selectFields(request *QueryRequest, jsonMap map[string]interface{}) (map[st
 }
 
 func findFromObject(request *QueryRequest, jsonMap map[string]interface{}) (interface{}, error) {
+	getLogger().Enter()
+	defer getLogger().Exit()
+
 	var tempMap map[string]interface{} = jsonMap
 	var dataptr interface{}
 
-	for _, key := range request.fromObjectSelectors {
+	getLogger().Tracef("Finding JSON object using path key(s): %v\n", request.fromObjectSelectors)
+
+	for i, key := range request.fromObjectSelectors {
 		dataptr = tempMap[key]
 
 		// if we find a nil value, this means we failed to find the object
@@ -336,12 +380,23 @@ func findFromObject(request *QueryRequest, jsonMap map[string]interface{}) (inte
 
 		// If the resulting value is indeed another map type, we expect for a Json Map
 		// we preserve that pointer for the next iteration
-		_, ok := dataptr.(map[string]interface{})
-		if ok {
+		_, isMap := dataptr.(map[string]interface{})
+		if isMap {
 			tempMap = dataptr.(map[string]interface{})
 		} else {
-			errPathObj := getLogger().Errorf(": %s: %s: %v (%T)", MSG_QUERY_INVALID_FROM_CLAUSE, MSG_ERROR_FROM_KEY_INVALID_OBJECT, dataptr, dataptr)
-			return nil, errPathObj
+
+			// TODO: We only support an array (i.e., []interface{}) as the last selector
+			// in theory, we could support arrays (perhaps array notation) in the FROM clause
+			// at any point (e.g., "metadata.component.properties[0]").
+			// we should still be able to support implicit arrays as well.
+			_, isArray := dataptr.([]interface{})
+
+			if isArray && ((i + 1) == len(request.fromObjectSelectors)) {
+				getLogger().Errorf("%s: %s: %v (%T)", "FROM clause dereferences to an array", "value (type): ", dataptr, dataptr)
+			} else {
+				errPathObj := getLogger().Errorf(": %s: %s: %v (%T)", MSG_QUERY_INVALID_FROM_CLAUSE, MSG_ERROR_FROM_KEY_INVALID_OBJECT, dataptr, dataptr)
+				return nil, errPathObj
+			}
 		}
 	}
 	return dataptr, nil

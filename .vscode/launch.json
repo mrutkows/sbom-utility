@@ -4,10 +4,99 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "showGlobalVariables": true,
-            "name": "CDX: TEST: package/npm/async/cra-discovery.json",
+            "name": "license policy",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go",
+            "args": ["license", "policy", "-t"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "license policy --format csv",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go",
+            "args": ["license", "policy", "--format", "csv", "-t"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "license list --summary -i test/cyclonedx/cdx-1-3-ibm-min-license-test.json",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["license", "list", "-i", "test/cyclonedx/cdx-1-3-ibm-min-license-test.json", "--summary", "-t"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "license list (default: json) -i test/cyclonedx/cdx-1-3-ibm-min-license-test.json",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["license", "list", "-i", "test/cyclonedx/cdx-1-3-ibm-min-license-test.json", "-t"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "license: list: CDX: package/npm/async/cra-discovery.json",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["license", "list", "-i", "test/cyclonedx/package/npm/async/cra-discovery.json"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "query: SELECT name,version FROM metadata.component: CDX: test/cyclonedx/cdx-1-3-ibm-min-required.json",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["query", "metadata.component", "--select", "name,version", "--from", "metadata.component", "-i", "test/cyclonedx/cdx-1-3-ibm-min-required.json"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "query: metadata.component: CDX: test/cyclonedx/cdx-1-3-ibm-min-required.json",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["query", "metadata.component", "--from", "metadata.component", "-i", "test/cyclonedx/cdx-1-3-ibm-min-required.json"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "query: component.name: CDX: test/cyclonedx/cdx-1-3-ibm-min-required.json",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["query", "metadata.component.name", "-i", "test/cyclonedx/cdx-1-3-ibm-min-required.json"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "query: component.name: CDX: package/npm/async/cra-discovery.json",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["query", "metadata.component.name", "-i", "test/cyclonedx/package/npm/async/cra-discovery.json"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "query: timestamp: CDX: package/npm/async/cra-discovery.json",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["query", "metadata.timestamp", "-i", "test/cyclonedx/package/npm/async/cra-discovery.json"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "validate: CDX: package/npm/async/cra-discovery.json",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -16,7 +105,7 @@
         },
         {
             "showGlobalVariables": true,
-            "name": "CDX: TEST: cdx-1-3-ibm-min-required.json",
+            "name": "validate: CDX: cdx-1-3-ibm-min-required.json",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -25,7 +114,7 @@
         },
         {
             "showGlobalVariables": true,
-            "name": "CDX: TEST: cdx-1-3-min-required.json (infer 1.3)",
+            "name": "validate: CDX: cdx-1-3-min-required.json (infer 1.3)",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -34,7 +123,7 @@
         },
         {
             "showGlobalVariables": true,
-            "name": "CDX: TEST: cdx-1-3-min-required.json (infer 1.3); variant: ibm",
+            "name": "validate: CDX: cdx-1-3-min-required.json (infer 1.3); variant: ibm",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -43,16 +132,25 @@
         },
         {
             "showGlobalVariables": true,
-            "name": "CDX: EXAMPLE: juice-shop/bom.json (infer 1.2)",
+            "name": "validate: CDX: juice-shop/bom.json: indent",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "program": "main.go", // "program": "${file}",
-            "args": ["validate", "-i", "examples/cyclonedx/juice-shop/bom.json"]
+            "args": ["validate", "-i", "examples/cyclonedx/juice-shop/bom.json", "-t", "--indent"]
         },
         {
             "showGlobalVariables": true,
-            "name": "CDX: EXAMPLE: NPM: CRA: package/npm/async/cra-discovery.json",
+            "name": "validate: CDX: EXAMPLE: juice-shop/bom.json (infer 1.2)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "main.go", // "program": "${file}",
+            "args": ["validate", "-i", "examples/cyclonedx/juice-shop/bom.json", "-t"]
+        },
+        {
+            "showGlobalVariables": true,
+            "name": "validate: CDX: EXAMPLE: NPM: CRA: package/npm/async/cra-discovery.json",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -61,7 +159,7 @@
         },
         {
             "showGlobalVariables": true,
-            "name": "CDX: EXAMPLE: NPM: NST: package/npm/async/nst-sbom.json",
+            "name": "validate: CDX: EXAMPLE: NPM: NST: package/npm/async/nst-sbom.json",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -70,7 +168,7 @@
         },
         {
             "showGlobalVariables": true,
-            "name": "SPDX: TEST: spdx-min-required.json (infer 2.2)",
+            "name": "validate: SPDX: spdx-min-required.json (infer 2.2)",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -79,7 +177,7 @@
         },
         {
             "showGlobalVariables": true,
-            "name": "SPDX: TEST: spdx-min-required-missing-creationinfo.json (infer)",
+            "name": "validate: SPDX: spdx-min-required-missing-creationinfo.json (infer)",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -88,7 +186,7 @@
         },
         {
             "showGlobalVariables": true,
-            "name": "SPDX: EXAMPLE: examples/spdx/example1/example1.json (infer schema)",
+            "name": "validate: SPDX: EXAMPLE: examples/spdx/example1/example1.json (infer schema)",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -97,7 +195,7 @@
         },
         {
             "showGlobalVariables": true,
-            "name": "SPDX: EXAMPLE: examples/spdx/example1/example1.json (force IBM schema)",
+            "name": "validate: SPDX: EXAMPLE: examples/spdx/example1/example1.json (force IBM schema)",
             "type": "go",
             "request": "launch",
             "mode": "debug",

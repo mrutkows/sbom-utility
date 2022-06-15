@@ -18,21 +18,17 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/mrutkows/sbom-utility/log"
 	"github.com/mrutkows/sbom-utility/utils"
 )
 
-// NOTE: Go test framework uses the "flags" package and all we need
-// do is declare a new global for it to be recognized.
-// USAGE: to set on command line and have it parsed, simply append
-// it as follows: '--args -trace'
-var TestLogLevelTrace = flag.Bool("trace", false, "")
-var TestLogLevelError = flag.Bool("error", false, "")
+const (
+	SBOM_CDX_1_3_JSON_IBM_MIN_REQ       = "test/cyclonedx/cdx-1-3-ibm-min-required.json"
+	SBOM_CDX_1_3_JSON_PKG_NPM_ASYNC_CRA = "test/cyclonedx/package/npm/async/cra-discovery.json"
+)
 
 // TODO: Consolidate query declarations
 
@@ -44,17 +40,7 @@ func init() {
 
 func innerQuery(t *testing.T, filename string, queryRequest *QueryRequest, autofail bool) error {
 	getLogger().Enter()
-
-	// in order for us to utilize command line flags with "go test", we
-	// must individually declare and access them via the "flags" package
-	if *TestLogLevelTrace {
-		// trace explicitely requested, set log level and turn off quite mode
-		getLogger().SetLevel(log.TRACE)
-		getLogger().SetQuietMode(false)
-	} else if *TestLogLevelError {
-		getLogger().SetLevel(log.ERROR)
-		getLogger().SetQuietMode(false)
-	}
+	defer getLogger().Exit()
 
 	// Parse normalized query clauses
 	queryRequest.parseQueryClauses()
@@ -72,7 +58,7 @@ func innerQuery(t *testing.T, filename string, queryRequest *QueryRequest, autof
 	}
 
 	// allocate response/result object
-	var response = new(QueryResult)
+	var response = new(QueryResponse)
 
 	iResult, errQuery := query(document.JsonMap, queryRequest, response)
 
@@ -87,16 +73,17 @@ func innerQuery(t *testing.T, filename string, queryRequest *QueryRequest, autof
 
 	// TODO: call Stringer on result (convert to JSON string) and output here if TRACE
 	printResult(iResult)
-	getLogger().Exit()
 	return nil
 }
 
 func printResult(iResult interface{}) {
-	// TODO: we default to "json" output format, but should be able to supply via flag
-	// we would need solid use cases to support other formats...
-	fResult, _ := utils.ConvertMapToJson("", iResult)
-	// Output the JSON data directly to stdout (not subject to log-level)
-	fmt.Printf("%s\n", fResult)
+	if !*TestLogQuiet {
+		// TODO: we default to "json" output format, but should be able to supply via flag
+		// we would need solid use cases to support other formats...
+		fResult, _ := utils.ConvertMapToJson("", iResult)
+		// Output the JSON data directly to stdout (not subject to log-level)
+		fmt.Printf("%s\n", fResult)
+	}
 }
 
 // ===========================================
@@ -104,12 +91,12 @@ func printResult(iResult interface{}) {
 // ===========================================
 
 // CDX 1.3, IBM Min. Required
-func TestQueryCdx13IbmMinMetadataTimestampString(t *testing.T) {
+func TestQueryCdx13IbmMinBomFormatSpecVersion(t *testing.T) {
 	request := QueryRequest{
-		selectFieldsRaw: "*",
-		fromObjectsRaw:  "metadata.timestamp",
+		selectFieldsRaw: "bomFormat,specVersion",
+		fromObjectsRaw:  "",
 	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
 }
 
 func TestQueryCdx13IbmMinMetadataTimestampField(t *testing.T) {
@@ -117,47 +104,7 @@ func TestQueryCdx13IbmMinMetadataTimestampField(t *testing.T) {
 		selectFieldsRaw: "timestamp",
 		fromObjectsRaw:  "metadata",
 	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
-}
-
-func TestQueryCdx13IbmMinMetadataComponentName(t *testing.T) {
-	request := QueryRequest{
-		selectFieldsRaw: "name",
-		fromObjectsRaw:  "metadata.component.name",
-	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
-}
-
-func TestQueryCdx13IbmMinMetadataSupplier(t *testing.T) {
-	request := QueryRequest{
-		selectFieldsRaw: "*",
-		fromObjectsRaw:  "metadata.supplier",
-	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
-}
-
-func TestQueryCdx13IbmMinMetadataManufacturer(t *testing.T) {
-	request := QueryRequest{
-		selectFieldsRaw: "*",
-		fromObjectsRaw:  "metadata.manufacture",
-	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
-}
-
-func TestQueryCdx13IbmMinMetadataComponentLicenses(t *testing.T) {
-	request := QueryRequest{
-		selectFieldsRaw: "*",
-		fromObjectsRaw:  "metadata.component.licenses",
-	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
-}
-
-func TestQueryCdx13IbmMinMetadataComponentLicensesLicenseExpression(t *testing.T) {
-	request := QueryRequest{
-		selectFieldsRaw: "license,expression",
-		fromObjectsRaw:  "metadata.component.licenses",
-	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
 }
 
 func TestQueryCdx13IbmMinMetadataComponent(t *testing.T) {
@@ -165,56 +112,99 @@ func TestQueryCdx13IbmMinMetadataComponent(t *testing.T) {
 		selectFieldsRaw: "*",
 		fromObjectsRaw:  "metadata.component",
 	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
 }
 
-func TestQueryCdx13IbmMinMetadataComponentSupplier(t *testing.T) {
+func TestQueryCdx13IbmMinMetadataComponentName(t *testing.T) {
 	request := QueryRequest{
-		selectFieldsRaw: "*",
-		fromObjectsRaw:  "metadata.component.supplier",
+		selectFieldsRaw: "name",
+		fromObjectsRaw:  "metadata.component",
 	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
-}
-
-func TestQueryCdx13IbmMinMetadataComponentPublisher(t *testing.T) {
-	request := QueryRequest{
-		selectFieldsRaw: "*",
-		fromObjectsRaw:  "metadata.component.publisher",
-	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
-}
-
-func TestQueryCdx13IbmMinMetadataComponentHashes(t *testing.T) {
-	request := QueryRequest{
-		selectFieldsRaw: "*",
-		fromObjectsRaw:  "metadata.component.hashes",
-	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
-}
-
-func TestQueryCdx13IbmMinMetadataComponentProperties(t *testing.T) {
-	request := QueryRequest{
-		selectFieldsRaw: "*",
-		fromObjectsRaw:  "metadata.component.properties",
-	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
 }
 
 func TestQueryCdx13IbmMinMetadataNameVersion(t *testing.T) {
 	request := QueryRequest{
-		selectFieldsRaw: "*",
-		fromObjectsRaw:  "metadata.component.foo",
+		selectFieldsRaw: "name,version",
+		fromObjectsRaw:  "metadata.component",
 	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, true)
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
 }
 
-// CDX 1.3, NPM Async
-func TestQueryCdx13NpmAsyncMetadataComponentNameVersion(t *testing.T) {
+func TestQueryCdx13IbmMinMetadataSupplier(t *testing.T) {
+	request := QueryRequest{
+		selectFieldsRaw: "*",
+		fromObjectsRaw:  "metadata.supplier",
+	}
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
+}
+
+func TestQueryCdx13IbmMinMetadataManufacturer(t *testing.T) {
+	request := QueryRequest{
+		selectFieldsRaw: "*",
+		fromObjectsRaw:  "metadata.manufacture",
+	}
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
+}
+
+func TestQueryCdx13IbmMinMetadataComponentLicenses(t *testing.T) {
+	request := QueryRequest{
+		selectFieldsRaw: "licenses",
+		fromObjectsRaw:  "metadata.component",
+	}
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
+}
+
+func TestQueryCdx13IbmMinMetadataComponentSupplier(t *testing.T) {
+	request := QueryRequest{
+		selectFieldsRaw: "supplier",
+		fromObjectsRaw:  "metadata.component",
+	}
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
+}
+
+func TestQueryCdx13IbmMinMetadataComponentPublisher(t *testing.T) {
+	request := QueryRequest{
+		selectFieldsRaw: "publisher",
+		fromObjectsRaw:  "metadata.component",
+	}
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
+}
+
+// NOTE: hashes is an []interface
+// func TestQueryCdx13IbmMinMetadataComponentHashes(t *testing.T) {
+// 	request := QueryRequest{
+// 		selectFieldsRaw: "*",
+// 		fromObjectsRaw:  "metadata.component.hashes",
+// 	}
+// 	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
+// }
+
+// NOTE: licenses is an []interface
+func TestQueryCdx13IbmMinMetadataComponentLicensesLicenseExpression(t *testing.T) {
+	request := QueryRequest{
+		selectFieldsRaw: "license,expression",
+		fromObjectsRaw:  "metadata.component.licenses",
+	}
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
+}
+
+// NOTE: properties is an []interface
+func TestQueryCdx13IbmMinMetadataComponentProperties(t *testing.T) {
+	request := QueryRequest{
+		selectFieldsRaw: "properties",
+		fromObjectsRaw:  "metadata.component",
+	}
+	innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, true)
+}
+
+// CDX 1.3, NPM Async, CRA
+func TestQueryCdx13NpmAsyncMetadataComponentNameVersionCRA(t *testing.T) {
 	request := QueryRequest{
 		selectFieldsRaw: "name,version",
-		fromObjectsRaw:  "metadata.component.name",
+		fromObjectsRaw:  "metadata.component",
 	}
-	innerQuery(t, "test/cyclonedx/package/npm/async/cra-discovery.json", &request, true)
+	innerQuery(t, SBOM_CDX_1_3_JSON_PKG_NPM_ASYNC_CRA, &request, true)
 }
 
 // ===========================================
@@ -240,7 +230,14 @@ func TestQueryFailCdx13IbmMinMetadataComponentFoo(t *testing.T) {
 		selectFieldsRaw: "*",
 		fromObjectsRaw:  "metadata.component.foo",
 	}
-	innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, false)
+
+	// Use innerquery, but turn "autofail" to false as we want to
+	// test for the expected error
+	err := innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, false)
+
+	if err == nil {
+		t.Errorf(err.Error())
+	}
 }
 
 func TestQueryFailTypeStringCdx13IbmMinMetadataComponentName(t *testing.T) {
@@ -254,7 +251,7 @@ func TestQueryFailTypeStringCdx13IbmMinMetadataComponentName(t *testing.T) {
 	}
 
 	// We must handle the error to verify it is the one we expect
-	err := innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, false)
+	err := innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, false)
 
 	// Assure we received an error with the expected key phrases
 	EvaluateErrorAndKeyPhrases(t, err, MSG_QUERY_INVALID_FROM_CLAUSE, errMessages)
@@ -272,7 +269,7 @@ func TestQueryFailCdx13IbmMinMetadataComponentNameWithWildcard(t *testing.T) {
 	}
 
 	// We must handle the error to verify it is the one we expect
-	err := innerQuery(t, "test/cyclonedx/cdx-1-3-ibm-min-required.json", &request, false)
+	err := innerQuery(t, SBOM_CDX_1_3_JSON_IBM_MIN_REQ, &request, false)
 
 	// Assure we received an error with the expected key phrases
 	EvaluateErrorAndKeyPhrases(t, err, MSG_QUERY_INVALID_SELECT_CLAUSE, errMessages)

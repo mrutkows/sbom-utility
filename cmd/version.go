@@ -24,20 +24,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	getLogger().Enter()
-	rootCmd.AddCommand(versionCmd)
-	getLogger().Exit()
-}
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "display program, binary and version information",
-	Long:  "display program, binary and version information in SemVer format (e.g., `<project> version <x.y.z>`)",
-	Run: func(cmd *cobra.Command, args []string) {
+func NewCommandVersion() *cobra.Command {
+	var command = new(cobra.Command)
+	command.Use = "version"
+	command.Short = "display program, binary and version information"
+	command.Long = "display program, binary and version information in SemVer format (e.g., `<project> version <x.y.z>`)"
+	command.Run = func(cmd *cobra.Command, args []string) {
 		getLogger().Enter()
+		defer getLogger().Exit()
 		// TODO: print cpu architecture of binary (e.g., go version go1.16.3 darwin/amd64)
 		fmt.Printf("%s version %s\n", utils.Flags.Project, utils.Flags.Version)
-		getLogger().Exit()
-	},
+	}
+	return command
 }

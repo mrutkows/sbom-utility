@@ -19,68 +19,15 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/mrutkows/sbom-utility/schema"
 	"github.com/mrutkows/sbom-utility/utils"
-	"github.com/spf13/cobra"
 	"github.com/xeipuuv/gojsonschema"
 )
 
-const (
-	VALID   = true
-	INVALID = false
-)
-
-func NewCommandValidate() *cobra.Command {
-	// NOTE: `RunE` function takes precedent over `Run` (anonymous) function if both provided
-	var command = new(cobra.Command)
-	command.Use = "validate -i <input-sbom.json>"
-	command.Short = "validate input file against its declared SBOM schema."
-	command.Long = "validate input file against its declared SBOM schema, if detectable and supported."
-	command.RunE = validateCmdImpl
-	initCommandValidate(command)
-	return command
-}
-
-// Add local flags to validate command
-func initCommandValidate(command *cobra.Command) {
-	getLogger().Enter()
-	defer getLogger().Exit()
-
-	// Force a schema file to use for validation (override inferred schema)
-	command.Flags().StringVarP(&utils.Flags.ForcedJsonSchemaFile, "force", "", "", "Explicit JSON schema file URL to force for validation; overrides inferred schema")
-	// Optional schema "variant" of inferred schema (e.g, "Strict")
-	command.Flags().StringVarP(&utils.Flags.Variant, "variant", "", "", "Select named schema variant (e.g., \"strict\"")
-	command.Flags().BoolVarP(&utils.Flags.ValidateProperties, "properties", "", true, "Validate customer properties and values.")
-}
-
-func validateCmdImpl(cmd *cobra.Command, args []string) error {
-	getLogger().Enter()
-	defer getLogger().Exit()
-
-	isValid, err := Validate()
-
-	if err != nil {
-		getLogger().Error(err)
-		os.Exit(ERROR_APPLICATION)
-	}
-
-	// ALWAYS output valid/invalid result (as informational)
-	message := fmt.Sprintf("document `%s`: valid=[%t]", utils.Flags.InputFile, isValid)
-	getLogger().Info(message)
-
-	// Report validation as an error and exit with non-zero return code
-	if !isValid {
-		getLogger().Error(message)
-		os.Exit(ERROR_VALIDATION)
-	}
-
-	// Note: this implies os.Exit(0) as the default from main.go (i.e., bash rc=0)
-	return nil
-}
-
-func Validate() (valid bool, err error) {
+// This function is used to validate required or optional prescriptive properties
+// and if present, their values also adhere to specified requirements
+func ValidateProperties() (valid bool, err error) {
 	getLogger().Enter()
 	defer getLogger().Exit(valid, err)
 
@@ -142,18 +89,4 @@ func Validate() (valid bool, err error) {
 	ListErrors(errs)
 
 	return result.Valid(), nil
-}
-
-func ListErrors(errs []gojsonschema.ResultError) {
-	lenErrs := len(errs)
-	if lenErrs > 0 {
-		getLogger().Error(fmt.Sprintf("(%d) Schema errors detected:", lenErrs))
-		for i, resultError := range errs {
-			getLogger().Error(fmt.Sprintf(">> %d. [%s] [%s]: \"%s\"",
-				i+1,
-				resultError.Type(),
-				resultError.Field(),
-				resultError.Description()))
-		}
-	}
 }

@@ -26,52 +26,56 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var schemaCmd = &cobra.Command{
-	Use:   "schema",
-	Short: "manage schemas.",
-	Long:  fmt.Sprintf("manage schemas supported by the utility. The default command produces a list based upon `%s`", DEFAULT_CONFIG),
-	RunE:  schemaCmdImpl,
+func NewCommandSchema() *cobra.Command {
+	var command = new(cobra.Command)
+	command.Use = "schema"
+	command.Short = "manage supported schemas."
+	command.Long = fmt.Sprintf("manage schemas supported by the utility. The default command produces a list based upon `%s`", DEFAULT_CONFIG)
+	command.RunE = schemaCmdImpl
+	initCommandSchema(command)
+	return command
 }
 
-func init() {
+func initCommandSchema(command *cobra.Command) {
 	getLogger().Enter()
-	schemaCmd.Flags().Bool("list", true, "List all configured schemas by format")
-	rootCmd.AddCommand(schemaCmd)
-	getLogger().Exit()
+	defer getLogger().Exit()
+
+	command.Flags().Bool("list", true, "List all configured schemas by format")
+	rootCmd.AddCommand(command)
 }
 
 func schemaCmdImpl(cmd *cobra.Command, args []string) error {
 	getLogger().Enter()
+	defer getLogger().Exit()
 
 	// initialize tabwriter
 	w := new(tabwriter.Writer)
 
 	// minwidth, tabwidth, padding, padchar, flags
-	w.Init(os.Stdout, 8, 8, 0, '\t', 0)
+	w.Init(os.Stdout, 8, 2, 2, ' ', 0)
 
 	defer w.Flush()
 
 	if len(schema.KnownSchemas.Formats) > 0 {
 		var formatName = ""
-		fmt.Fprintf(w, "\n %s\t %s\t %s\t", "format", "Schema", "Version")
-		fmt.Fprintf(w, "\n %s\t %s\t %s\t", "------", "------", "-------")
+		fmt.Fprintf(w, "\n%s\t%s\t%s\t", "format", "Schema", "Version")
+		fmt.Fprintf(w, "\n%s\t%s\t%s\t", "------", "------", "-------")
 
 		for _, format := range (schema.KnownSchemas).Formats {
 			formatName = format.CanonicalName
 
 			if len(format.Schemas) > 0 {
 				for _, schema := range format.Schemas {
-					fmt.Fprintf(w, "\n %v\t %s\t %s\t", formatName, schema.Version, schema.Variant)
+					fmt.Fprintf(w, "\n%v\t%s\t%s\t", formatName, schema.Version, schema.Variant)
 				}
 			} else {
-				getLogger().Warning(fmt.Sprintf("No supported schemas for format `%s`.\n", formatName))
+				getLogger().Warningf("No supported schemas for format `%s`.\n", formatName)
 			}
 		}
 	} else {
-		getLogger().Warning(fmt.Sprintf("No supported built-in formats found in `%s`.\n", DEFAULT_CONFIG))
+		getLogger().Warningf("No supported built-in formats found in `%s`.\n", DEFAULT_CONFIG)
 	}
 
 	fmt.Fprintln(w, "")
-	getLogger().Exit()
 	return nil
 }
